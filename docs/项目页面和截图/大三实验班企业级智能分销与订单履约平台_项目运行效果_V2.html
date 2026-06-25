@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>企业级智能分销与订单履约平台 · 运行演示</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"JetBrains Mono","Fira Code","Segoe UI","PingFang SC",monospace,sans-serif; background:#111217; color:#c0c5d0; }
+
+  /* 顶部 */
+  .topbar { background:#181b1f; border-bottom:1px solid #2c3235; height:52px; display:flex; align-items:center; padding:0 20px; gap:16px; }
+  .topbar .brand { font-size:15px; font-weight:700; color:#f0f6fc; display:flex; align-items:center; gap:8px; }
+  .topbar .brand .pulse { width:8px; height:8px; border-radius:50%; background:#73bf69; box-shadow:0 0 8px rgba(115,191,105,0.5); animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .topbar .nav-pills { display:flex; gap:4px; margin-left:24px; }
+  .nav-pill { padding:5px 14px; border-radius:4px; font-size:12px; color:#8e8e8e; cursor:pointer; border:none; background:transparent; }
+  .nav-pill:hover { background:#2c3235; color:#c0c5d0; }
+  .nav-pill.active { background:#2c3235; color:#f0f6fc; font-weight:600; }
+  .topbar .user { margin-left:auto; display:flex; align-items:center; gap:10px; font-size:12px; color:#8e8e8e; }
+  .user-tag { background:#1f60c4; color:#fff; padding:2px 8px; border-radius:3px; font-size:11px; font-weight:600; }
+
+  /* 布局 */
+  .layout { display:flex; min-height:calc(100vh - 52px); }
+  .sidebar { width:56px; background:#181b1f; border-right:1px solid #2c3235; padding:12px 0; display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .side-icon { width:36px; height:36px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; color:#8e8e8e; transition:all .15s; }
+  .side-icon:hover { background:#2c3235; color:#c0c5d0; }
+  .side-icon.active { background:#2c3235; color:#73bf69; }
+
+  .main { flex:1; padding:16px 20px; overflow:auto; }
+  .page-title { font-size:16px; font-weight:700; color:#f0f6fc; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+
+  /* 面板 */
+  .panel { display:none; }
+  .panel.active { display:block; }
+
+  /* 统计卡片 - Grafana风格 */
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+  .stat-card { background:#181b1f; border:1px solid #2c3235; border-radius:4px; padding:14px; position:relative; }
+  .stat-card::before { content:""; position:absolute; top:0; left:0; width:3px; height:100%; background:#73bf69; border-radius:4px 0 0 4px; }
+  .stat-card.warn::before { background:#f2cc0c; }
+  .stat-card.err::before { background:#e02f44; }
+  .stat-card.info::before { background:#5794f2; }
+  .stat-lbl { font-size:11px; color:#8e8e8e; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+  .stat-val { font-size:24px; font-weight:700; color:#f0f6fc; }
+  .stat-sub { font-size:11px; color:#73bf69; margin-top:4px; }
+  .stat-sub.warn { color:#f2cc0c; }
+  .stat-sub.err { color:#e02f44; }
+
+  /* 卡片 */
+  .card { background:#181b1f; border:1px solid #2c3235; border-radius:4px; margin-bottom:12px; }
+  .card-hd { padding:10px 14px; border-bottom:1px solid #2c3235; display:flex; align-items:center; justify-content:space-between; }
+  .card-hd h3 { font-size:13px; font-weight:600; color:#f0f6fc; }
+  .card-bd { padding:12px 14px; }
+
+  /* 表格 */
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th { padding:8px 12px; text-align:left; font-weight:600; color:#8e8e8e; border-bottom:1px solid #2c3235; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; }
+  td { padding:8px 12px; border-bottom:1px solid #2c3235; color:#c0c5d0; }
+  tr:hover td { background:#1f2327; }
+  .txt-right { text-align:right; }
+  .txt-center { text-align:center; }
+
+  .tag { display:inline-block; padding:2px 8px; border-radius:3px; font-size:11px; font-weight:600; }
+  .t-green { background:rgba(115,191,105,0.15); color:#73bf69; border:1px solid rgba(115,191,105,0.3); }
+  .t-blue { background:rgba(87,148,242,0.15); color:#5794f2; border:1px solid rgba(87,148,242,0.3); }
+  .t-yellow { background:rgba(242,204,12,0.15); color:#f2cc0c; border:1px solid rgba(242,204,12,0.3); }
+  .t-red { background:rgba(224,47,68,0.15); color:#e02f44; border:1px solid rgba(224,47,68,0.3); }
+  .t-gray { background:rgba(142,142,142,0.15); color:#8e8e8e; border:1px solid rgba(142,142,142,0.3); }
+
+  .btn { padding:4px 10px; border-radius:3px; border:1px solid #2c3235; background:#1f2327; font-size:11px; color:#c0c5d0; cursor:pointer; }
+  .btn:hover { border-color:#5794f2; color:#5794f2; }
+  .btn-sm { padding:2px 6px; font-size:10px; }
+
+  /* 终端日志 */
+  .term { background:#0b0c10; border:1px solid #2c3235; border-radius:4px; padding:12px; font-family:"JetBrains Mono","Fira Code",monospace; font-size:11px; line-height:1.7; max-height:220px; overflow:auto; }
+  .term-line { margin-bottom:2px; }
+  .term-time { color:#4a4a4a; }
+  .term-info { color:#73bf69; }
+  .term-warn { color:#f2cc0c; }
+  .term-err { color:#e02f44; }
+  .term-cmd { color:#5794f2; }
+
+  /* 图表 */
+  .chart-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+  .chart-card { background:#181b1f; border:1px solid #2c3235; border-radius:4px; padding:14px; }
+  .chart-hd { font-size:13px; font-weight:600; color:#f0f6fc; margin-bottom:12px; }
+  .bar-wrap { display:flex; align-items:flex-end; gap:10px; height:150px; padding:0 8px; }
+  .bar { flex:1; background:linear-gradient(to top,#1f60c4,#5794f2); border-radius:2px 2px 0 0; position:relative; opacity:0.9; }
+  .bar:hover { opacity:1; }
+  .bar-lbl { position:absolute; bottom:-18px; left:50%; transform:translateX(-50%); font-size:10px; color:#8e8e8e; white-space:nowrap; }
+  .pie-wrap { width:120px; height:120px; border-radius:50%; background:conic-gradient(#5794f2 0% 35%, #73bf69 35% 60%, #f2cc0c 60% 80%, #e02f44 80% 100%); margin:0 auto; position:relative; }
+  .pie-c { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:12px; font-weight:700; color:#f0f6fc; }
+  .leg { display:flex; justify-content:center; gap:10px; margin-top:10px; flex-wrap:wrap; }
+  .leg-i { display:flex; align-items:center; gap:3px; font-size:11px; color:#8e8e8e; }
+  .leg-dot { width:7px; height:7px; border-radius:50%; }
+
+  /* 服务卡片 */
+  .svc-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .svc-card { background:#181b1f; border:1px solid #2c3235; border-radius:4px; padding:12px; display:flex; align-items:center; gap:10px; }
+  .svc-dot { width:8px; height:8px; border-radius:50%; }
+  .svc-dot.up { background:#73bf69; box-shadow:0 0 6px rgba(115,191,105,0.4); }
+  .svc-dot.down { background:#e02f44; box-shadow:0 0 6px rgba(224,47,68,0.4); }
+  .svc-info h5 { font-size:12px; font-weight:600; color:#f0f6fc; margin-bottom:1px; }
+  .svc-info p { font-size:10px; color:#8e8e8e; }
+  .svc-metric { margin-left:auto; text-align:right; }
+  .svc-metric .val { font-size:14px; font-weight:700; color:#f0f6fc; }
+  .svc-metric .lbl { font-size:10px; color:#8e8e8e; }
+
+  /* 聊天 */
+  .chat-box { background:#0b0c10; border:1px solid #2c3235; border-radius:4px; padding:14px; height:280px; overflow:auto; }
+  .chat-msg { margin-bottom:10px; display:flex; gap:8px; }
+  .chat-avatar { width:28px; height:28px; border-radius:4px; background:#1f60c4; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
+  .chat-avatar.user { background:#73bf69; }
+  .chat-bubble { background:#181b1f; border:1px solid #2c3235; border-radius:4px; padding:8px 12px; font-size:12px; line-height:1.6; max-width:420px; color:#c0c5d0; }
+  .chat-bubble.user { background:#1a2e1a; border-color:#2d4a2d; }
+
+  /* 流程 */
+  .flow-line { display:flex; align-items:center; gap:8px; margin:12px 0; flex-wrap:wrap; }
+  .flow-node { background:#1a2332; color:#5794f2; padding:6px 12px; border-radius:3px; font-size:11px; font-weight:500; border:1px solid #2c4a6e; }
+  .flow-node.done { background:#1a2e1a; color:#73bf69; border-color:#2d4a2d; }
+  .flow-node.cur { background:#2e2a1a; color:#f2cc0c; border-color:#5a4a1a; }
+  .flow-arrow { color:#4a4a4a; font-size:12px; }
+
+  /* 指标 */
+  .metric-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .metric-box { background:#181b1f; border:1px solid #2c3235; border-radius:4px; padding:12px; }
+  .metric-box .m-lbl { font-size:10px; color:#8e8e8e; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px; }
+  .metric-box .m-val { font-size:16px; font-weight:700; color:#f0f6fc; }
+  .metric-box .m-bar { height:3px; background:#2c3235; border-radius:2px; margin-top:8px; overflow:hidden; }
+  .metric-box .m-fill { height:100%; border-radius:2px; }
+
+  .footer-area { margin-top:32px; padding-top:16px; border-top:1px solid #2c3235; font-size:11px; color:#4a4a4a; text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><div class="pulse"></div>🔧 智能分销平台监控</div>
+  <div class="nav-pills">
+    <button class="nav-pill active" onclick="switchTab(0)">服务治理</button>
+    <button class="nav-pill" onclick="switchTab(1)">订单履约</button>
+    <button class="nav-pill" onclick="switchTab(2)">数据看板</button>
+    <button class="nav-pill" onclick="switchTab(3)">AI客服</button>
+    <button class="nav-pill" onclick="switchTab(4)">系统监控</button>
+  </div>
+  <div class="user"><span class="user-tag">ADMIN</span><span>admin</span></div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="side-icon active" onclick="switchTab(0)">📡</div>
+    <div class="side-icon" onclick="switchTab(1)">📋</div>
+    <div class="side-icon" onclick="switchTab(2)">📊</div>
+    <div class="side-icon" onclick="switchTab(3)">🤖</div>
+    <div class="side-icon" onclick="switchTab(4)">⚙️</div>
+  </nav>
+
+  <main class="main">
+
+    <!-- 服务治理 -->
+    <div class="panel active" id="panel0">
+      <div class="page-title">📡 微服务治理中心</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-lbl">微服务数</div><div class="stat-val">5</div><div class="stat-sub">全部健康</div></div>
+        <div class="stat-card info"><div class="stat-lbl">服务实例</div><div class="stat-val">6</div><div class="stat-sub">含2个库存实例</div></div>
+        <div class="stat-card warn"><div class="stat-lbl">Gateway路由</div><div class="stat-val">5</div><div class="stat-sub warn">已配置</div></div>
+        <div class="stat-card err"><div class="stat-lbl">熔断降级</div><div class="stat-val">0</div><div class="stat-sub err">当前正常</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>Nacos服务注册日志</h3><span class="tag t-green">● 运行中</span></div>
+        <div class="card-bd">
+          <div class="term">
+            <div class="term-line"><span class="term-time">[10:00:15]</span> <span class="term-info">[INFO]</span> Nacos Server started successfully in 3.2s</div>
+            <div class="term-line"><span class="term-time">[10:01:22]</span> <span class="term-info">[INFO]</span> Service registered: user-center <span class="term-cmd">192.168.1.101:8001</span></div>
+            <div class="term-line"><span class="term-time">[10:01:25]</span> <span class="term-info">[INFO]</span> Service registered: product-center <span class="term-cmd">192.168.1.101:8002</span></div>
+            <div class="term-line"><span class="term-time">[10:01:28]</span> <span class="term-info">[INFO]</span> Service registered: stock-center <span class="term-cmd">192.168.1.101:8003</span></div>
+            <div class="term-line"><span class="term-time">[10:01:30]</span> <span class="term-warn">[WARN]</span> Service registered: stock-center <span class="term-cmd">192.168.1.101:8004</span> <span class="term-warn">[集群实例2]</span></div>
+            <div class="term-line"><span class="term-time">[10:01:32]</span> <span class="term-info">[INFO]</span> Service registered: order-center <span class="term-cmd">192.168.1.101:8005</span></div>
+            <div class="term-line"><span class="term-time">[10:01:35]</span> <span class="term-info">[INFO]</span> Service registered: pay-center <span class="term-cmd">192.168.1.101:8006</span></div>
+            <div class="term-line"><span class="term-time">[10:02:10]</span> <span class="term-info">[INFO]</span> Service registered: gateway-service <span class="term-cmd">192.168.1.101:9000</span></div>
+            <div class="term-line"><span class="term-time">[10:05:00]</span> <span class="term-warn">[WARN]</span> Heartbeat check: all services healthy</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>微服务实例状态</h3></div>
+        <div class="card-bd">
+          <div class="svc-grid">
+            <div class="svc-card"><div class="svc-dot up"></div><div class="svc-info"><h5>user-center</h5><p>用户中心 · 8001 · 1实例</p></div><div class="svc-metric"><div class="val">12ms</div><div class="lbl">响应时间</div></div></div>
+            <div class="svc-card"><div class="svc-dot up"></div><div class="svc-info"><h5>product-center</h5><p>商品中心 · 8002 · 1实例</p></div><div class="svc-metric"><div class="val">8ms</div><div class="lbl">响应时间</div></div></div>
+            <div class="svc-card"><div class="svc-dot up"></div><div class="svc-info"><h5>stock-center</h5><p>库存中心 · 8003/8004 · 2实例</p></div><div class="svc-metric"><div class="val">15ms</div><div class="lbl">响应时间</div></div></div>
+            <div class="svc-card"><div class="svc-dot up"></div><div class="svc-info"><h5>order-center</h5><p>订单中心 · 8005 · 1实例</p></div><div class="svc-metric"><div class="val">22ms</div><div class="lbl">响应时间</div></div></div>
+            <div class="svc-card"><div class="svc-dot up"></div><div class="svc-info"><h5>pay-center</h5><p>支付中心 · 8006 · 1实例</p></div><div class="svc-metric"><div class="val">18ms</div><div class="lbl">响应时间</div></div></div>
+            <div class="svc-card"><div class="svc-dot up"></div><div class="svc-info"><h5>gateway-service</h5><p>网关服务 · 9000 · 统一入口</p></div><div class="svc-metric"><div class="val">5ms</div><div class="lbl">响应时间</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>Gateway路由配置</h3></div>
+        <div class="card-bd">
+          <div class="term">
+            <div class="term-line"><span class="term-warn"># Gateway路由断言配置</span></div>
+            <div class="term-line">spring.cloud.gateway.routes[0].id=<span class="term-cmd">user_route</span></div>
+            <div class="term-line">spring.cloud.gateway.routes[0].uri=lb://user-center</div>
+            <div class="term-line">spring.cloud.gateway.routes[0].predicates[0]=<span class="term-cmd">Path=/api/user/**</span></div>
+            <div class="term-line">spring.cloud.gateway.routes[1].id=<span class="term-cmd">product_route</span></div>
+            <div class="term-line">spring.cloud.gateway.routes[1].uri=lb://product-center</div>
+            <div class="term-line">spring.cloud.gateway.routes[1].predicates[0]=<span class="term-cmd">Path=/api/product/**</span></div>
+            <div class="term-line">spring.cloud.gateway.routes[2].id=<span class="term-cmd">order_route</span></div>
+            <div class="term-line">spring.cloud.gateway.routes[2].uri=lb://order-center</div>
+            <div class="term-line">spring.cloud.gateway.routes[2].predicates[0]=<span class="term-cmd">Path=/api/order/**</span></div>
+            <div class="term-line"><span class="term-warn"># JWT鉴权过滤器已启用 → 无Token返回401</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 订单履约 -->
+    <div class="panel" id="panel1">
+      <div class="page-title">📋 订单履约链路</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-lbl">今日订单</div><div class="stat-val">1,280</div><div class="stat-sub">↑ 12%</div></div>
+        <div class="stat-card info"><div class="stat-lbl">今日成交额</div><div class="stat-val">¥128K</div><div class="stat-sub">↑ 8%</div></div>
+        <div class="stat-card warn"><div class="stat-lbl">待发货</div><div class="stat-val">23</div><div class="stat-sub warn">需处理</div></div>
+        <div class="stat-card err"><div class="stat-lbl">异常订单</div><div class="stat-val">5</div><div class="stat-sub err">库存不足</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>订单列表（跨服务调用）</h3></div>
+        <div class="card-bd" style="padding:0;">
+          <table>
+            <tr><th>订单号</th><th>商品</th><th>数量</th><th class="txt-right">金额</th><th>状态</th><th>库存服务</th><th>支付服务</th><th>时间</th></tr>
+            <tr><td>DD202505190001</td><td>机械键盘-Keychron K3</td><td>2</td><td class="txt-right">¥736</td><td><span class="tag t-green">已支付</span></td><td><span class="tag t-blue">stock:8003</span></td><td><span class="tag t-blue">pay:8006</span></td><td>09:30</td></tr>
+            <tr><td>DD202505190002</td><td>无线鼠标-罗技M720</td><td>5</td><td class="txt-right">¥642</td><td><span class="tag t-yellow">待支付</span></td><td><span class="tag t-blue">stock:8004</span></td><td>-</td><td>09:45</td></tr>
+            <tr><td>DD202505190003</td><td>HDMI高清线-绿联2米</td><td>10</td><td class="txt-right">¥350</td><td><span class="tag t-green">已发货</span></td><td><span class="tag t-blue">stock:8003</span></td><td><span class="tag t-blue">pay:8006</span></td><td>10:00</td></tr>
+            <tr><td>DD202505190004</td><td>铝合金笔记本支架</td><td>3</td><td class="txt-right">¥267</td><td><span class="tag t-red">库存不足</span></td><td><span class="tag t-red">扣减失败</span></td><td>-</td><td>10:15</td></tr>
+            <tr><td>DD202505190005</td><td>A4打印纸-得力70g</td><td>20</td><td class="txt-right">¥440</td><td><span class="tag t-green">已完成</span></td><td><span class="tag t-blue">stock:8004</span></td><td><span class="tag t-blue">pay:8006</span></td><td>08:30</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>分布式事务链路（Seata AT模式）</h3></div>
+        <div class="card-bd">
+          <div class="flow-line">
+            <div class="flow-node">订单服务<br><span style="font-size:10px;">TM</span></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node done">@GlobalTransactional<br><span style="font-size:10px;">开启全局事务</span></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">库存服务<br><span style="font-size:10px;">RM</span></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node cur">扣减库存<br><span style="font-size:10px;">undo_log</span></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node">支付服务<br><span style="font-size:10px;">RM</span></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node done">创建支付单<br><span style="font-size:10px;">undo_log</span></div>
+          </div>
+          <div style="margin-top:12px; font-size:12px; color:#73bf69;">✅ DD202505190001：库存扣减成功（2件）→ 支付单创建成功 → TC通知RM删除undo_log → 全局事务提交</div>
+          <div style="margin-top:4px; font-size:12px; color:#e02f44;">❌ DD202505190004：库存扣减失败（库存不足）→ 抛出异常 → TM通知TC回滚 → TC驱动RM用undo_log恢复数据 → 订单表回滚</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>Sentinel限流监控</h3></div>
+        <div class="card-bd" style="padding:0;">
+          <table>
+            <tr><th>资源名</th><th>限流阈值</th><th>当前QPS</th><th>拒绝QPS</th><th>熔断状态</th><th>降级策略</th></tr>
+            <tr><td>/api/stock/deduct</td><td>100</td><td>87</td><td>0</td><td><span class="tag t-green">正常</span></td><td>快速失败</td></tr>
+            <tr><td>/api/order/create</td><td>200</td><td>156</td><td>12</td><td><span class="tag t-yellow">警告</span></td><td>匀速排队</td></tr>
+            <tr><td>/api/pay/callback</td><td>50</td><td>48</td><td>2</td><td><span class="tag t-green">正常</span></td><td>快速失败</td></tr>
+            <tr><td>/api/product/list</td><td>500</td><td>320</td><td>0</td><td><span class="tag t-green">正常</span></td><td>直接拒绝</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据看板 -->
+    <div class="panel" id="panel2">
+      <div class="page-title">📊 经营分析驾驶舱</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-lbl">今日订单</div><div class="stat-val">1,280</div><div class="stat-sub">↑ 12%</div></div>
+        <div class="stat-card info"><div class="stat-lbl">成交额</div><div class="stat-val">¥128K</div><div class="stat-sub">↑ 8%</div></div>
+        <div class="stat-card warn"><div class="stat-lbl">待发货</div><div class="stat-val">23</div><div class="stat-sub warn">需处理</div></div>
+        <div class="stat-card err"><div class="stat-lbl">异常</div><div class="stat-val">5</div><div class="stat-sub err">库存不足</div></div>
+      </div>
+      <div class="chart-row">
+        <div class="chart-card">
+          <div class="chart-hd">今日各服务调用量</div>
+          <div class="bar-wrap">
+            <div class="bar" style="height:70%;"><div class="bar-lbl">Gateway</div></div>
+            <div class="bar" style="height:55%;"><div class="bar-lbl">Order</div></div>
+            <div class="bar" style="height:80%;"><div class="bar-lbl">Stock</div></div>
+            <div class="bar" style="height:45%;"><div class="bar-lbl">Product</div></div>
+            <div class="bar" style="height:30%;"><div class="bar-lbl">Pay</div></div>
+            <div class="bar" style="height:25%;"><div class="bar-lbl">User</div></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-hd">订单状态分布</div>
+          <div style="display:flex; align-items:center; justify-content:center; height:160px;">
+            <div class="pie-wrap"><div class="pie-c">1,280</div></div>
+          </div>
+          <div class="leg">
+            <div class="leg-i"><div class="leg-dot" style="background:#5794f2;"></div>已支付 35%</div>
+            <div class="leg-i"><div class="leg-dot" style="background:#73bf69;"></div>已完成 25%</div>
+            <div class="leg-i"><div class="leg-dot" style="background:#f2cc0c;"></div>待支付 20%</div>
+            <div class="leg-i"><div class="leg-dot" style="background:#e02f44;"></div>异常 20%</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>近7天订单趋势</h3></div>
+        <div class="card-bd">
+          <div class="bar-wrap" style="height:180px;">
+            <div class="bar" style="height:40%;"><div class="bar-lbl">5/13</div></div>
+            <div class="bar" style="height:55%;"><div class="bar-lbl">5/14</div></div>
+            <div class="bar" style="height:45%;"><div class="bar-lbl">5/15</div></div>
+            <div class="bar" style="height:70%;"><div class="bar-lbl">5/16</div></div>
+            <div class="bar" style="height:60%;"><div class="bar-lbl">5/17</div></div>
+            <div class="bar" style="height:85%;"><div class="bar-lbl">5/18</div></div>
+            <div class="bar" style="height:75%;"><div class="bar-lbl">5/19</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI客服 -->
+    <div class="panel" id="panel3">
+      <div class="page-title">🤖 DeepSeek AI 智能客服</div>
+      <div class="card">
+        <div class="card-hd"><h3>客服对话窗口</h3><span class="tag t-green">● 在线</span></div>
+        <div class="card-bd">
+          <div class="chat-box" id="chatBox">
+            <div class="chat-msg">
+              <div class="chat-avatar user">U</div>
+              <div class="chat-bubble user">我的订单DD202505190001到哪了？</div>
+            </div>
+            <div class="chat-msg">
+              <div class="chat-avatar">AI</div>
+              <div class="chat-bubble">
+                <div style="font-weight:600; margin-bottom:4px;">订单号：DD202505190001</div>
+                <div>📦 商品：机械键盘-Keychron K3 × 2</div>
+                <div>💰 金额：¥736.00</div>
+                <div>🚚 物流状态：<span style="color:#73bf69; font-weight:600;">已发货</span></div>
+                <div>📍 当前位置：北京市顺义区集散中心</div>
+                <div>⏰ 预计送达：2026-05-20 14:00前</div>
+                <div style="margin-top:6px; color:#8e8e8e; font-size:11px;">由DeepSeek大模型根据订单数据自动生成回复</div>
+              </div>
+            </div>
+            <div class="chat-msg">
+              <div class="chat-avatar user">U</div>
+              <div class="chat-bubble user">从北京仓发货到上海浦东要多久？</div>
+            </div>
+            <div class="chat-msg">
+              <div class="chat-avatar">AI</div>
+              <div class="chat-bubble">
+                <div style="font-weight:600; margin-bottom:4px;">智能路径规划</div>
+                <div>🛣️ 推荐路线：北京仓 → 京沪高速 → 沪嘉高速 → 上海浦东</div>
+                <div>⏱️ 预计时效：<span style="color:#5794f2; font-weight:600;">18小时</span>（约次日14:00送达）</div>
+                <div>🚛 承运商：顺丰速运（陆运）</div>
+                <div style="margin-top:6px; color:#8e8e8e; font-size:11px;">由DeepSeek根据物流大数据生成路径建议</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <input style="flex:1; background:#0b0c10; border:1px solid #2c3235; border-radius:3px; padding:8px 12px; color:#c0c5d0; font-size:12px; outline:none;" placeholder="输入问题..." id="chatInput">
+            <button class="btn" onclick="sendMsg()">发送</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>AI智能推荐（模拟）</h3></div>
+        <div class="card-bd">
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
+            <div style="background:#0b0c10; border:1px solid #2c3235; border-radius:3px; padding:10px;">
+              <div style="font-size:12px; font-weight:600; color:#f0f6fc; margin-bottom:3px;">🎯 搭配推荐</div>
+              <div style="font-size:11px; color:#8e8e8e;">您浏览过机械键盘，推荐搭配Keychron K3专用掌托，提升打字舒适度。</div>
+            </div>
+            <div style="background:#0b0c10; border:1px solid #2c3235; border-radius:3px; padding:10px;">
+              <div style="font-size:12px; font-weight:600; color:#f0f6fc; margin-bottom:3px;">📉 库存预警</div>
+              <div style="font-size:11px; color:#8e8e8e;">无线鼠标-罗技M720库存仅剩8件，建议及时补货（安全库存20件）。</div>
+            </div>
+            <div style="background:#0b0c10; border:1px solid #2c3235; border-radius:3px; padding:10px;">
+              <div style="font-size:12px; font-weight:600; color:#f0f6fc; margin-bottom:3px;">📈 热销趋势</div>
+              <div style="font-size:11px; color:#8e8e8e;">HDMI高清线近7天销量增长120%，建议增加采购量至200条。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 系统监控 -->
+    <div class="panel" id="panel4">
+      <div class="page-title">⚙️ 系统运行监控</div>
+      <div class="metric-grid">
+        <div class="metric-box">
+          <div class="m-lbl">SpringBoot版本</div>
+          <div class="m-val">3.2.5</div>
+          <div class="m-bar"><div class="m-fill" style="width:85%; background:#5794f2;"></div></div>
+        </div>
+        <div class="metric-box">
+          <div class="m-lbl">SpringCloud Alibaba</div>
+          <div class="m-val">2022.0.0.0</div>
+          <div class="m-bar"><div class="m-fill" style="width:90%; background:#73bf69;"></div></div>
+        </div>
+        <div class="metric-box">
+          <div class="m-lbl">JDK版本</div>
+          <div class="m-val">17 LTS</div>
+          <div class="m-bar"><div class="m-fill" style="width:100%; background:#5794f2;"></div></div>
+        </div>
+        <div class="metric-box">
+          <div class="m-lbl">Nacos服务数</div>
+          <div class="m-val">6</div>
+          <div class="m-bar"><div class="m-fill" style="width:100%; background:#73bf69;"></div></div>
+        </div>
+        <div class="metric-box">
+          <div class="m-lbl">Seata事务模式</div>
+          <div class="m-val">AT模式</div>
+          <div class="m-bar"><div class="m-fill" style="width:80%; background:#f2cc0c;"></div></div>
+        </div>
+        <div class="metric-box">
+          <div class="m-lbl">Sentinel限流规则</div>
+          <div class="m-val">4条</div>
+          <div class="m-bar"><div class="m-fill" style="width:60%; background:#5794f2;"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>系统运行指标（模拟数据）</h3></div>
+        <div class="card-bd" style="padding:0;">
+          <table>
+            <tr><th>指标</th><th>数值</th><th>说明</th></tr>
+            <tr><td>SpringBoot版本</td><td>3.2.5</td><td>基于Spring Framework 6.1</td></tr>
+            <tr><td>SpringCloud Alibaba版本</td><td>2022.0.0.0</td><td>Nacos + Gateway + OpenFeign + Sentinel + Seata</td></tr>
+            <tr><td>JDK版本</td><td>17</td><td>LTS长期支持版本</td></tr>
+            <tr><td>Vue版本</td><td>3.4.21</td><td>Composition API + Vite构建</td></tr>
+            <tr><td>Nacos服务数</td><td>6</td><td>5个业务服务 + 1个Gateway</td></tr>
+            <tr><td>库存服务实例</td><td>2</td><td>端口8003、8004（轮询负载均衡）</td></tr>
+            <tr><td>Seata事务模式</td><td>AT模式</td><td>undo_log自动回滚</td></tr>
+            <tr><td>Sentinel限流规则</td><td>4条</td><td>库存扣减100QPS、订单创建200QPS等</td></tr>
+            <tr><td>Gateway路由</td><td>5条</td><td>/api/user、/api/product、/api/stock、/api/order、/api/pay</td></tr>
+            <tr><td>AI调用次数（今日）</td><td>156</td><td>DeepSeek API，平均耗时1.2s</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>实习衔接知识点映射</h3></div>
+        <div class="card-bd">
+          <div style="font-size:12px; line-height:2.2; color:#c0c5d0;">
+            <div><span style="display:inline-block; width:6px; height:6px; background:#8b5cf6; border-radius:50%; margin-right:8px;"></span><b style="color:#f0f6fc;">DDD服务拆分</b> → 实习面试"微服务怎么拆"（按业务领域、按数据边界、按团队规模）</div>
+            <div><span style="display:inline-block; width:6px; height:6px; background:#8b5cf6; border-radius:50%; margin-right:8px;"></span><b style="color:#f0f6fc;">Nacos注册发现</b> → 实习面试"服务注册中心原理"（临时实例心跳、配置推送、命名空间隔离）</div>
+            <div><span style="display:inline-block; width:6px; height:6px; background:#8b5cf6; border-radius:50%; margin-right:8px;"></span><b style="color:#f0f6fc;">OpenFeign+Ribbon</b> → 实习面试"远程调用怎么实现"（HTTP客户端、负载均衡策略、熔断降级）</div>
+            <div><span style="display:inline-block; width:6px; height:6px; background:#8b5cf6; border-radius:50%; margin-right:8px;"></span><b style="color:#f0f6fc;">Gateway网关</b> → 实习面试"网关的作用"（路由转发、统一鉴权、跨域处理、限流入口）</div>
+            <div><span style="display:inline-block; width:6px; height:6px; background:#8b5cf6; border-radius:50%; margin-right:8px;"></span><b style="color:#f0f6fc;">Seata AT分布式事务</b> → 实习面试"分布式事务方案"（AT/TCC/Saga对比、undo_log原理）</div>
+            <div><span style="display:inline-block; width:6px; height:6px; background:#8b5cf6; border-radius:50%; margin-right:8px;"></span><b style="color:#f0f6fc;">Sentinel限流降级</b> → 实习面试"怎么防止系统被刷爆"（QPS限流、热点参数、熔断策略）</div>
+            <div><span style="display:inline-block; width:6px; height:6px; background:#8b5cf6; border-radius:50%; margin-right:8px;"></span><b style="color:#f0f6fc;">DeepSeek AI接入</b> → 实习面试加分项"大模型怎么和业务结合"（Prompt工程、API调用）</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-area">
+      企业级智能分销与订单履约平台 · SpringCloud Alibaba + Vue3 · 运行演示环境
+    </div>
+  </main>
+</div>
+
+<script>
+function switchTab(n) {
+  document.querySelectorAll('.panel').forEach((p,i) => p.classList.toggle('active', i===n));
+  document.querySelectorAll('.nav-pill').forEach((t,i) => t.classList.toggle('active', i===n));
+  document.querySelectorAll('.side-icon').forEach((t,i) => t.classList.toggle('active', i===n));
+}
+function sendMsg() {
+  const input = document.getElementById('chatInput');
+  const box = document.getElementById('chatBox');
+  if(!input.value.trim()) return;
+  box.innerHTML += `<div class="chat-msg"><div class="chat-avatar user">U</div><div class="chat-bubble user">${input.value}</div></div>`;
+  setTimeout(()=>{
+    box.innerHTML += `<div class="chat-msg"><div class="chat-avatar">AI</div><div class="chat-bubble">已收到您的问题，正在查询订单数据并生成回复...<br><span style="color:#8e8e8e; font-size:11px; margin-top:4px; display:block;">由DeepSeek大模型实时生成</span></div></div>`;
+    box.scrollTop = box.scrollHeight;
+  }, 500);
+  input.value = '';
+  box.scrollTop = box.scrollHeight;
+}
+</script>
+
+</body>
+</html>
