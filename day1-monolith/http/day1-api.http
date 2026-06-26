@@ -1,0 +1,62 @@
+### 商品列表
+GET http://localhost:8080/api/product/list
+
+### 库存列表
+GET http://localhost:8080/api/stock/list
+
+### 订单列表
+GET http://localhost:8080/api/order/list
+
+### 经营看板汇总
+GET http://localhost:8080/api/order/dashboard/summary
+
+### 创建订单 - 正常扣减库存
+POST http://localhost:8080/api/order/create
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "productId": 1,
+  "warehouseId": 1,
+  "quantity": 2,
+  "receiverName": "张三",
+  "receiverPhone": "13800138000",
+  "receiverAddress": "北京市海淀区中关村南大街5号"
+}
+
+### 创建订单 - 库存不足
+POST http://localhost:8080/api/order/create
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "productId": 2,
+  "warehouseId": 1,
+  "quantity": 99,
+  "receiverName": "张三",
+  "receiverPhone": "13800138000",
+  "receiverAddress": "北京市海淀区中关村南大街5号"
+}
+
+### 支付回调 - 把订单改为已支付
+POST http://localhost:8080/api/pay/callback
+Content-Type: application/json
+
+{
+  "orderNo": "DD202505190002",
+  "payStatus": "支付成功",
+  "payMethod": "支付宝",
+  "callbackContent": "{\"tradeStatus\":\"SUCCESS\"}"
+}
+
+### AI 客服 - 查询订单
+POST http://localhost:8080/api/ai/chat
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "question": "我的订单DD202505190003到哪了？"
+}
+
+### AI 推荐
+GET http://localhost:8080/api/ai/recommendations
