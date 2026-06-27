@@ -5,12 +5,15 @@ import com.buu.product.entity.BrowseHistory;
 import com.buu.product.entity.Product;
 import com.buu.product.service.BrowseHistoryService;
 import com.buu.product.service.ProductService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 商品 Controller
@@ -18,10 +21,19 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/product")
+@RefreshScope
 public class ProductController {
 
     private final ProductService productService;
     private final BrowseHistoryService browseHistoryService;
+    @Value("${spring.application.name:product-center}")
+    private String serviceName;
+    @Value("${server.port:8002}")
+    private String serverPort;
+    @Value("${product.config.stock:0}")
+    private Integer configStock;
+    @Value("${product.config.desc:本地默认商品配置}")
+    private String configDesc;
 
     public ProductController(ProductService productService, BrowseHistoryService browseHistoryService) {
         this.productService = productService;
@@ -58,5 +70,20 @@ public class ProductController {
     @GetMapping("/browse-history/{userId}")
     public R<List<BrowseHistory>> listBrowseHistory(@PathVariable Long userId) {
         return R.success(browseHistoryService.listByUserId(userId));
+    }
+
+    /**
+     * 查询 Nacos 配置中心演示配置
+     *
+     * @return 当前服务名、端口和可被 Nacos 动态覆盖的商品配置
+     */
+    @GetMapping("/config")
+    public R<Map<String, Object>> config() {
+        return R.success(Map.of(
+                "serviceName", serviceName,
+                "serverPort", serverPort,
+                "stock", configStock,
+                "desc", configDesc
+        ));
     }
 }

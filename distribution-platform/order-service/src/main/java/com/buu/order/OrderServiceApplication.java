@@ -2,9 +2,11 @@ package com.buu.order;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.mybatis.spring.annotation.MapperScan;
 
 @MapperScan("com.buu.order.mapper")
+@EnableFeignClients
 @SpringBootApplication
 public class OrderServiceApplication {
 

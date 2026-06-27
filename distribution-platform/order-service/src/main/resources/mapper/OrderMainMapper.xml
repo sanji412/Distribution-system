@@ -28,6 +28,32 @@
           AND create_time &lt; #{endTime}
     </select>
 
+    <select id="selectByOrderNo" resultType="com.buu.order.entity.OrderMain">
+        SELECT
+            order_id,
+            order_no,
+            user_id,
+            product_name,
+            product_num,
+            total_amount,
+            order_status,
+            receiver_name,
+            receiver_phone,
+            receiver_address,
+            logistics_company,
+            logistics_no,
+            logistics_status,
+            current_location,
+            expect_arrive_time,
+            create_time,
+            pay_time,
+            delivery_time,
+            finish_time
+        FROM order_main
+        WHERE order_no = #{orderNo}
+        LIMIT 1
+    </select>
+
     <!--
         订单列表：当前阶段尚未接入 OpenFeign，库存服务和支付服务字段先按演示数据生成标签。
         后续接入服务调用后，可替换为真实 stock-center/pay-center 返回值。

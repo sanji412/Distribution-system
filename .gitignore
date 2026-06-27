@@ -5,6 +5,10 @@ target/
 logs/
 node_modules/
 dist/
+.runtime/
+docs/superpowers/
+docs/2026_06_26_完整代码 - 副本 (2)/
+docs/day3/**/nacos-server-*.zip
 
 # Maven wrapper jar can be regenerated
 .mvn/wrapper/maven-wrapper.jar

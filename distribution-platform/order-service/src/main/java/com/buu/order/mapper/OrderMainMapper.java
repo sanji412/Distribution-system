@@ -26,6 +26,14 @@ public interface OrderMainMapper extends BaseMapper<OrderMain> {
                                        @Param("endTime") LocalDateTime endTime);
 
     /**
+     * 根据订单编号查询订单主表
+     *
+     * @param orderNo 订单编号
+     * @return 订单主表记录
+     */
+    OrderMain selectByOrderNo(@Param("orderNo") String orderNo);
+
+    /**
      * 查询订单履约列表
      *
      * @return 订单列表行数据
