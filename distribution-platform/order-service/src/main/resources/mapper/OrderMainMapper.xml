@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.buu.order.mapper.OrderMainMapper">
+
+    <!--
+        订单履约汇总：从订单主表按当天时间窗口统计页面顶部四个指标。
+        今日成交额只统计已支付、已发货、已完成订单，避免待支付和库存不足订单进入成交口径。
+    -->
+    <select id="selectTodaySummary" resultType="com.buu.order.dto.OrderSummaryDTO">
+        SELECT
+            COUNT(1) AS today_order_count,
+            COALESCE(SUM(CASE
+                WHEN order_status IN ('已支付', '已发货', '已完成') THEN total_amount
+                ELSE 0
+            END), 0) AS today_trade_amount,
+            COALESCE(SUM(CASE
+                WHEN order_status = '已支付'
+                 AND (logistics_status IS NULL OR logistics_status = '待发货') THEN 1
+                ELSE 0
+            END), 0) AS pending_delivery_count,
+            COALESCE(SUM(CASE
+                WHEN order_status = '库存不足' THEN 1
+                ELSE 0
+            END), 0) AS exception_order_count
+        FROM order_main
+        WHERE create_time &gt;= #{startTime}
+          AND create_time &lt; #{endTime}
+    </select>
+
+    <!--
+        订单列表：当前阶段尚未接入 OpenFeign，库存服务和支付服务字段先按演示数据生成标签。
+        后续接入服务调用后，可替换为真实 stock-center/pay-center 返回值。
+    -->
+    <select id="selectOrderList" resultType="com.buu.order.dto.OrderListItemDTO">
+        SELECT
+            order_no AS order_no,
+            product_name AS product_name,
+            product_num AS product_num,
+            total_amount AS total_amount,
+            order_status AS order_status,
+            CASE
+                WHEN order_status = '库存不足' THEN '扣减失败'
+                WHEN order_no IN ('DD202505190001', 'DD202505190003') THEN 'stock:8003'
+                WHEN order_no IN ('DD202505190002', 'DD202505190005') THEN 'stock:8004'
+                WHEN MOD(order_id, 2) = 0 THEN 'stock:8004'
+                ELSE 'stock:8003'
+            END AS stock_service,
+            CASE
+                WHEN order_status IN ('已支付', '已发货', '已完成') THEN 'pay:8006'
+                ELSE '-'
+            END AS pay_service,
+            DATE_FORMAT(create_time, '%H:%i') AS order_time
+        FROM order_main
+        ORDER BY
+            CASE order_no
+                WHEN 'DD202505190001' THEN 1
+                WHEN 'DD202505190002' THEN 2
+                WHEN 'DD202505190003' THEN 3
+                WHEN 'DD202505190004' THEN 4
+                WHEN 'DD202505190005' THEN 5
+                ELSE 99
+            END,
+            create_time DESC
+        LIMIT 5
+    </select>
+</mapper>
