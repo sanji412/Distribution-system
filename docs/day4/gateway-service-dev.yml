@@ -1,0 +1,41 @@
+# Nacos 配置中心示例：gateway-service-dev.yml
+# 当前先保留基础路由，不包含 JWT 鉴权与自定义路由断言。
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: user_route
+          uri: lb://user-center
+          predicates:
+            - Path=/api/user/**
+        - id: product_route
+          uri: lb://product-center
+          predicates:
+            - Path=/api/product/**
+        - id: stock_route
+          uri: lb://stock-center
+          predicates:
+            - Path=/api/stock/**
+        - id: order_route
+          uri: lb://order-center
+          predicates:
+            - Path=/api/order/**
+        - id: pay_route
+          uri: lb://pay-center
+          predicates:
+            - Path=/api/pay/**
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowed-origin-patterns:
+              - '*'
+            allowed-methods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowed-headers:
+              - '*'
+            allow-credentials: true
