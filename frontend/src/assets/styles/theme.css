@@ -595,6 +595,64 @@
   background: rgba(145, 43, 58, 0.18);
 }
 
+.product-editor {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 14px 4px;
+  padding: 12px;
+  border: 1px solid #2c3235;
+  border-radius: 4px;
+  background: #101419;
+}
+
+.product-editor label {
+  display: grid;
+  gap: 5px;
+  color: #8f98a3;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.product-editor input,
+.product-editor select {
+  width: 100%;
+  height: 30px;
+  padding: 0 9px;
+  border: 1px solid #2c3235;
+  border-radius: 3px;
+  color: #d8dee9;
+  background: #0b0f14;
+  font-size: 12px;
+}
+
+.product-editor-actions {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+}
+
+.product-editor-actions button {
+  height: 30px;
+  min-width: 52px;
+  padding: 0 10px;
+  border: 1px solid #2e5d97;
+  border-radius: 3px;
+  color: #58a6ff;
+  background: rgba(37, 92, 151, 0.2);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.product-editor-actions button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.inline-warning.success {
+  color: #73bf69;
+}
+
 .data-ops-grid {
   align-items: start;
 }
@@ -723,7 +781,8 @@
   .monitor-card-grid,
   .instance-grid,
   .split-grid,
-  .recommend-grid {
+  .recommend-grid,
+  .product-editor {
     grid-template-columns: 1fr;
   }
 

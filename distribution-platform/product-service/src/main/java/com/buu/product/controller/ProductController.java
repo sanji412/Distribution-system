@@ -7,8 +7,12 @@ import com.buu.product.service.BrowseHistoryService;
 import com.buu.product.service.ProductService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -59,6 +63,40 @@ public class ProductController {
     @GetMapping("/{productId}")
     public R<Product> detail(@PathVariable Long productId) {
         return R.success(productService.getById(productId));
+    }
+
+    /**
+     * 新增商品
+     *
+     * @param product 商品信息
+     * @return 新增后的商品信息
+     */
+    @PostMapping({"", "/create"})
+    public R<Product> create(@RequestBody Product product) {
+        return R.success(productService.createProduct(product));
+    }
+
+    /**
+     * 更新商品
+     *
+     * @param productId 商品 ID
+     * @param product 商品信息
+     * @return 更新后的商品信息
+     */
+    @PutMapping("/{productId}")
+    public R<Product> update(@PathVariable Long productId, @RequestBody Product product) {
+        return R.success(productService.updateProduct(productId, product));
+    }
+
+    /**
+     * 删除商品
+     *
+     * @param productId 商品 ID
+     * @return 删除结果
+     */
+    @DeleteMapping("/{productId}")
+    public R<Boolean> delete(@PathVariable Long productId) {
+        return R.success(productService.deleteProduct(productId));
     }
 
     /**

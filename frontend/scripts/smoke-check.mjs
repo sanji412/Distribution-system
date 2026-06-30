@@ -112,8 +112,17 @@ if (!orderApi.includes('/api/order/dashboard')) {
 }
 
 const productApi = readFileSync(resolve(root, 'src/api/product.js'), 'utf8')
-if (!productApi.includes('/api/product/list')) {
-  throw new Error('product.js must request /api/product/list')
+for (const snippet of ['/api/product/list', '/api/product/create', 'createProduct', 'updateProduct', 'deleteProduct']) {
+  if (!productApi.includes(snippet)) {
+    throw new Error(`product.js must include product CRUD support: ${snippet}`)
+  }
+}
+
+const productPageCrudLabels = ['新增', '编辑', '删除', '保存']
+for (const label of productPageCrudLabels) {
+  if (!dashboardView.includes(label)) {
+    throw new Error(`Dashboard product CRUD page missing label: ${label}`)
+  }
 }
 
 const stockApi = readFileSync(resolve(root, 'src/api/stock.js'), 'utf8')
