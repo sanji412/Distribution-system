@@ -28,6 +28,48 @@
           AND create_time &lt; #{endTime}
     </select>
 
+    <select id="selectStatusDistribution" resultType="com.buu.order.dto.OrderStatusDistributionDTO">
+        SELECT
+            order_status AS label,
+            COUNT(1) AS count,
+            0 AS percent,
+            CASE order_status
+                WHEN '已支付' THEN '#5b8def'
+                WHEN '已完成' THEN '#73bf69'
+                WHEN '待支付' THEN '#f1c40f'
+                WHEN '已发货' THEN '#26c6da'
+                WHEN '库存不足' THEN '#f0445e'
+                ELSE '#8d929b'
+            END AS color
+        FROM order_main
+        WHERE create_time &gt;= #{startTime}
+          AND create_time &lt; #{endTime}
+        GROUP BY order_status
+        ORDER BY CASE order_status
+            WHEN '已支付' THEN 1
+            WHEN '已完成' THEN 2
+            WHEN '待支付' THEN 3
+            WHEN '已发货' THEN 4
+            WHEN '库存不足' THEN 5
+            ELSE 99
+        END
+    </select>
+
+    <select id="selectSevenDayTrend" resultType="com.buu.order.dto.OrderTrendDTO">
+        SELECT
+            DATE_FORMAT(create_time, '%m/%d') AS date,
+            COUNT(1) AS order_count,
+            COALESCE(SUM(CASE
+                WHEN order_status IN ('已支付', '已发货', '已完成') THEN total_amount
+                ELSE 0
+            END), 0) AS trade_amount
+        FROM order_main
+        WHERE create_time &gt;= #{startTime}
+          AND create_time &lt; #{endTime}
+        GROUP BY DATE_FORMAT(create_time, '%m/%d')
+        ORDER BY MIN(create_time)
+    </select>
+
     <select id="selectByOrderNo" resultType="com.buu.order.entity.OrderMain">
         SELECT
             order_id,
@@ -54,10 +96,6 @@
         LIMIT 1
     </select>
 
-    <!--
-        订单列表：当前阶段尚未接入 OpenFeign，库存服务和支付服务字段先按演示数据生成标签。
-        后续接入服务调用后，可替换为真实 stock-center/pay-center 返回值。
-    -->
     <select id="selectOrderList" resultType="com.buu.order.dto.OrderListItemDTO">
         SELECT
             order_no AS order_no,
@@ -67,13 +105,10 @@
             order_status AS order_status,
             CASE
                 WHEN order_status = '库存不足' THEN '扣减失败'
-                WHEN order_no IN ('DD202505190001', 'DD202505190003') THEN 'stock:8003'
-                WHEN order_no IN ('DD202505190002', 'DD202505190005') THEN 'stock:8004'
-                WHEN MOD(order_id, 2) = 0 THEN 'stock:8004'
-                ELSE 'stock:8003'
+                ELSE 'stock-center'
             END AS stock_service,
             CASE
-                WHEN order_status IN ('已支付', '已发货', '已完成') THEN 'pay:8006'
+                WHEN order_status IN ('已支付', '已发货', '已完成') THEN 'pay-center'
                 ELSE '-'
             END AS pay_service,
             DATE_FORMAT(create_time, '%H:%i') AS order_time

@@ -2,6 +2,7 @@ package com.buu.order.service;
 
 import com.buu.order.dto.OrderDashboardResponse;
 import com.buu.order.dto.OrderListItemDTO;
+import com.buu.order.dto.OrderOperationsAnalysisResponse;
 import com.buu.order.dto.OrderSummaryDTO;
 
 import java.time.LocalDate;
@@ -20,6 +21,14 @@ public interface OrderQueryService {
      * @return 汇总指标和订单列表
      */
     OrderDashboardResponse getDashboard(LocalDate bizDate);
+
+    /**
+     * 查询经营分析驾驶舱数据
+     *
+     * @param bizDate 业务日期
+     * @return 今日指标、状态分布和七天趋势
+     */
+    OrderOperationsAnalysisResponse getOperationsAnalysis(LocalDate bizDate);
 
     /**
      * 查询指定日期的订单汇总指标

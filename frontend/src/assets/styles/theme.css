@@ -327,6 +327,11 @@
   box-shadow: 0 0 9px rgba(115, 191, 105, 0.65);
 }
 
+.health-dot.is-down {
+  background: #f0445e;
+  box-shadow: 0 0 9px rgba(240, 68, 94, 0.5);
+}
+
 .table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -474,7 +479,7 @@
 }
 
 .pie-chart::after {
-  content: "1,280";
+  content: attr(data-total);
   position: absolute;
   inset: 0;
   display: grid;

@@ -37,6 +37,7 @@ const requiredFiles = [
   'src/views/AiCustomerService.vue',
   'src/views/SystemMonitor.vue',
   'src/api/http.js',
+  'src/api/governance.js',
   'src/api/order.js',
   'src/api/product.js',
   'src/api/stock.js',
@@ -96,19 +97,41 @@ for (const label of ['商品管理（CRUD）', '库存查询', '商品编码', '
   }
 }
 
+const governanceView = readFileSync(resolve(root, 'src/views/ServiceGovernance.vue'), 'utf8')
+if (!governanceView.includes('getGovernanceOverview')) {
+  throw new Error('ServiceGovernance.vue must request live governance overview data')
+}
+
 const viteConfig = readFileSync(resolve(root, 'vite.config.js'), 'utf8')
 if (!viteConfig.includes('localhost:9000')) {
   throw new Error('vite.config.js must proxy API requests to localhost:9000')
 }
 
+if (!viteConfig.includes("'/api/governance'")) {
+  throw new Error('vite.config.js must proxy /api/governance requests')
+}
+
 const httpApi = readFileSync(resolve(root, 'src/api/http.js'), 'utf8')
-if (!httpApi.includes('localhost:9000')) {
-  throw new Error('http.js must point Axios baseURL to localhost:9000')
+if (!httpApi.includes("import.meta.env.VITE_API_BASE_URL || ''")) {
+  throw new Error('http.js must use same-origin API requests by default so Vite proxy can forward to Gateway')
 }
 
 const orderApi = readFileSync(resolve(root, 'src/api/order.js'), 'utf8')
 if (!orderApi.includes('/api/order/dashboard')) {
   throw new Error('order.js must request /api/order/dashboard')
+}
+if (!orderApi.includes('/api/order/analysis')) {
+  throw new Error('order.js must request /api/order/analysis')
+}
+
+const governanceApi = readFileSync(resolve(root, 'src/api/governance.js'), 'utf8')
+if (!governanceApi.includes('/api/governance/overview')) {
+  throw new Error('governance.js must request /api/governance/overview')
+}
+for (const path of ['/api/governance/traffic', '/api/governance/system-monitor']) {
+  if (!governanceApi.includes(path)) {
+    throw new Error(`governance.js must request ${path}`)
+  }
 }
 
 const productApi = readFileSync(resolve(root, 'src/api/product.js'), 'utf8')
@@ -126,10 +149,19 @@ for (const label of productPageCrudLabels) {
 }
 
 const stockApi = readFileSync(resolve(root, 'src/api/stock.js'), 'utf8')
-for (const path of ['/api/stock/list', '/api/stock/warehouse/list']) {
+for (const path of ['/api/stock/list', '/api/stock/warehouse/list', '/api/stock/sentinel/rules']) {
   if (!stockApi.includes(path)) {
     throw new Error(`stock.js must request ${path}`)
   }
+}
+
+if (!orderView.includes('listSentinelRules')) {
+  throw new Error('Order page must request live Sentinel rule data')
+}
+
+const systemMonitorView = readFileSync(resolve(root, 'src/views/SystemMonitor.vue'), 'utf8')
+if (!systemMonitorView.includes('getSystemMonitor')) {
+  throw new Error('System monitor page must request live monitor data')
 }
 
 console.log('frontend scaffold smoke check passed')

@@ -25,6 +25,10 @@ export default defineConfig({
       '/api/pay': {
         target: 'http://localhost:9000',
         changeOrigin: true
+      },
+      '/api/governance': {
+        target: 'http://localhost:9000',
+        changeOrigin: true
       }
     }
   }

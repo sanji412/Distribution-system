@@ -3,17 +3,19 @@
     <h1 class="page-title">📊 经营分析驾驶舱</h1>
 
     <div class="metric-grid">
-      <MetricCard title="今日订单" value="1,280" tone="success" hint="↑ 12%" />
-      <MetricCard title="成交额" value="¥128K" tone="primary" hint="↑ 8%" />
-      <MetricCard title="待发货" value="23" tone="warning" hint="需处理" />
-      <MetricCard title="异常" value="5" tone="danger" hint="库存不足" />
+      <MetricCard title="今日订单" :value="formatNumber(analytics.summary.todayOrderCount)" tone="success" hint="实时统计" />
+      <MetricCard title="成交额" :value="formatAmount(analytics.summary.todayTradeAmount)" tone="primary" hint="已支付口径" />
+      <MetricCard title="待发货" :value="analytics.summary.pendingDeliveryCount" tone="warning" hint="待处理" />
+      <MetricCard title="异常" :value="analytics.summary.exceptionOrderCount" tone="danger" hint="异常状态" />
     </div>
+
+    <p v-if="analyticsWarning" class="inline-warning">{{ analyticsWarning }}</p>
 
     <div class="split-grid">
       <PanelBox title="今日各服务调用量">
         <div class="bar-chart service-bars">
-          <div v-for="item in dashboardMock.serviceCalls" :key="item.name" class="bar-item">
-            <div class="bar-fill" :style="{ height: `${item.value / 5.5}px` }"></div>
+          <div v-for="item in analytics.serviceCalls" :key="item.name" class="bar-item">
+            <div class="bar-fill" :style="{ height: barHeight(item.value, analytics.serviceCalls, 'value') }"></div>
             <span>{{ item.name }}</span>
           </div>
         </div>
@@ -21,9 +23,9 @@
 
       <PanelBox title="订单状态分布">
         <div class="pie-layout">
-          <div class="pie-chart"></div>
+          <div class="pie-chart" :data-total="formatNumber(statusTotal)" :style="pieStyle"></div>
           <div class="legend-row">
-            <span v-for="item in dashboardMock.status" :key="item.label">
+            <span v-for="item in analytics.statusDistribution" :key="item.label">
               <i :style="{ background: item.color }"></i>{{ item.label }} {{ item.percent }}%
             </span>
           </div>
@@ -33,8 +35,8 @@
 
     <PanelBox title="近7天订单趋势">
       <div class="bar-chart trend-bars">
-        <div v-for="item in dashboardMock.trend" :key="item.date" class="bar-item">
-          <div class="bar-fill" :style="{ height: `${item.value / 6}px` }"></div>
+        <div v-for="item in analytics.trend" :key="item.date" class="bar-item">
+          <div class="bar-fill" :style="{ height: barHeight(item.orderCount, analytics.trend, 'orderCount') }"></div>
           <span>{{ item.date }}</span>
         </div>
       </div>
@@ -151,21 +153,38 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import MetricCard from '../components/MetricCard.vue'
 import PanelBox from '../components/PanelBox.vue'
 import StatusTag from '../components/StatusTag.vue'
-import { dashboardMock, productManagementMock, stockQueryMock } from '../api/mock'
+import { dashboardMock, mockOrderDashboard, productManagementMock, stockQueryMock } from '../api/mock'
+import { getGatewayTraffic } from '../api/governance'
+import { getOrderAnalysis } from '../api/order'
 import { createProduct, deleteProduct, listProducts, updateProduct } from '../api/product'
 import { listStocks, listWarehouses } from '../api/stock'
 
+const analytics = ref({
+  summary: mockOrderDashboard.summary,
+  serviceCalls: dashboardMock.serviceCalls,
+  statusDistribution: fallbackStatusDistribution(),
+  trend: fallbackTrend()
+})
 const products = ref(productManagementMock)
 const stocks = ref(stockQueryMock)
 const loading = ref(false)
 const warning = ref('')
+const analyticsWarning = ref('')
 const productEditorVisible = ref(false)
 const savingProduct = ref(false)
 const productMessage = ref('')
+
+const statusTotal = computed(() =>
+  analytics.value.statusDistribution.reduce((total, item) => total + Number(item.count || 0), 0)
+)
+
+const pieStyle = computed(() => ({
+  background: buildPieGradient(analytics.value.statusDistribution)
+}))
 
 const emptyProductForm = () => ({
   productId: null,
@@ -185,7 +204,40 @@ onMounted(loadDashboardData)
 async function loadDashboardData() {
   loading.value = true
   warning.value = ''
+  analyticsWarning.value = ''
 
+  try {
+    await Promise.all([loadAnalyticsData(), loadProductAndStockData()])
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadAnalyticsData() {
+  try {
+    const [orderAnalysis, gatewayTraffic] = await Promise.all([
+      getOrderAnalysis(),
+      getGatewayTraffic()
+    ])
+
+    analytics.value = {
+      summary: orderAnalysis?.summary || mockOrderDashboard.summary,
+      serviceCalls: normalizeServiceCalls(gatewayTraffic?.serviceCalls),
+      statusDistribution: normalizeStatusDistribution(orderAnalysis?.statusDistribution),
+      trend: normalizeTrend(orderAnalysis?.trend)
+    }
+  } catch (error) {
+    analytics.value = {
+      summary: mockOrderDashboard.summary,
+      serviceCalls: dashboardMock.serviceCalls,
+      statusDistribution: fallbackStatusDistribution(),
+      trend: fallbackTrend()
+    }
+    analyticsWarning.value = '订单分析或Gateway流量接口未启动，图表展示本地演示数据。'
+  }
+}
+
+async function loadProductAndStockData() {
   try {
     const [productRows, stockRows, warehouseRows] = await Promise.all([
       listProducts(),
@@ -207,8 +259,8 @@ async function loadDashboardData() {
         warehouse: warehouse?.warehouseName || `仓库${item.warehouseId}`,
         product: product?.productName || `商品${item.productId}`,
         available: stockNum,
-        locked: 0,
-        service: Number(item.warehouseId) % 2 === 0 ? 'stock:8004' : 'stock:8003',
+        locked: '-',
+        service: 'stock-center',
         status: stockNum <= 0 ? '缺货' : stockNum <= 10 ? '预警' : '正常'
       }
     })
@@ -216,8 +268,6 @@ async function loadDashboardData() {
     products.value = productManagementMock
     stocks.value = stockQueryMock
     warning.value = '商品或库存服务未启动，当前展示本地演示数据。'
-  } finally {
-    loading.value = false
   }
 }
 
@@ -329,6 +379,71 @@ function exportProducts() {
   link.download = 'products.json'
   link.click()
   URL.revokeObjectURL(url)
+}
+
+function normalizeServiceCalls(rows) {
+  return rows?.length ? rows : dashboardMock.serviceCalls
+}
+
+function normalizeStatusDistribution(rows) {
+  return rows?.length ? rows : fallbackStatusDistribution()
+}
+
+function normalizeTrend(rows) {
+  return rows?.length ? rows : fallbackTrend()
+}
+
+function fallbackStatusDistribution() {
+  const total = Number(mockOrderDashboard.summary.todayOrderCount || 0)
+  return dashboardMock.status.map((item) => ({
+    ...item,
+    count: Math.round((total * Number(item.percent || 0)) / 100)
+  }))
+}
+
+function fallbackTrend() {
+  return dashboardMock.trend.map((item) => ({
+    date: item.date,
+    orderCount: item.value,
+    tradeAmount: 0
+  }))
+}
+
+function barHeight(value, rows, key) {
+  const max = Math.max(...rows.map((item) => Number(item[key] || 0)), 1)
+  const current = Number(value || 0)
+  return `${Math.max(24, Math.round((current / max) * 214))}px`
+}
+
+function buildPieGradient(rows) {
+  if (!rows.length || rows.every((item) => Number(item.percent || 0) <= 0)) {
+    return 'conic-gradient(#2a3036 0 100%)'
+  }
+
+  let start = 0
+  const segments = rows.map((item) => {
+    const percent = Number(item.percent || 0)
+    const end = start + percent
+    const segment = `${item.color || '#8d929b'} ${start}% ${end}%`
+    start = end
+    return segment
+  })
+  if (start < 100) {
+    segments.push(`#2a3036 ${start}% 100%`)
+  }
+  return `conic-gradient(${segments.join(', ')})`
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString('en-US')
+}
+
+function formatAmount(value) {
+  const amount = Number(value || 0)
+  if (amount >= 1000) {
+    return `¥${Math.round(amount / 1000)}K`
+  }
+  return `¥${amount}`
 }
 
 function formatMoney(value) {

@@ -3,10 +3,10 @@
     <h1 class="page-title">📋 订单履约链路</h1>
 
     <div class="metric-grid">
-      <MetricCard title="今日订单" :value="formatNumber(dashboard.summary.todayOrderCount)" tone="success" hint="↑ 12%" />
-      <MetricCard title="今日成交额" :value="formatAmount(dashboard.summary.todayTradeAmount)" tone="primary" hint="↑ 8%" />
-      <MetricCard title="待发货" :value="dashboard.summary.pendingDeliveryCount" tone="warning" hint="需处理" />
-      <MetricCard title="异常订单" :value="dashboard.summary.exceptionOrderCount" tone="danger" hint="库存不足" />
+      <MetricCard title="今日订单" :value="formatNumber(dashboard.summary.todayOrderCount)" tone="success" hint="实时统计" />
+      <MetricCard title="今日成交额" :value="formatAmount(dashboard.summary.todayTradeAmount)" tone="primary" hint="已支付口径" />
+      <MetricCard title="待发货" :value="dashboard.summary.pendingDeliveryCount" tone="warning" hint="待处理" />
+      <MetricCard title="异常订单" :value="dashboard.summary.exceptionOrderCount" tone="danger" hint="异常状态" />
     </div>
 
     <PanelBox title="订单列表（跨服务调用）">
@@ -64,6 +64,11 @@
     </PanelBox>
 
     <PanelBox title="Sentinel限流监控">
+      <template #action>
+        <StatusTag v-if="sentinelWarning" value="演示数据" type="warning" />
+        <StatusTag v-else value="已联调" type="success" />
+      </template>
+      <p v-if="sentinelWarning" class="inline-warning">{{ sentinelWarning }}</p>
       <div class="table-wrap">
         <table class="data-table">
           <thead>
@@ -77,7 +82,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="rule in sentinelRulesMock" :key="rule.resource">
+            <tr v-for="rule in sentinelRules" :key="rule.resource">
               <td>{{ rule.resource }}</td>
               <td>{{ rule.threshold }}</td>
               <td>{{ rule.qps }}</td>
@@ -99,14 +104,18 @@ import PanelBox from '../components/PanelBox.vue'
 import StatusTag from '../components/StatusTag.vue'
 import { mockOrderDashboard, seataFlowMock, sentinelRulesMock } from '../api/mock'
 import { getOrderDashboard } from '../api/order'
+import { listSentinelRules } from '../api/stock'
 
 const dashboard = ref(mockOrderDashboard)
+const sentinelRules = ref(sentinelRulesMock)
 const loading = ref(false)
 const warning = ref('')
+const sentinelWarning = ref('')
 
 onMounted(async () => {
   loading.value = true
   warning.value = ''
+  sentinelWarning.value = ''
 
   try {
     dashboard.value = await getOrderDashboard()
@@ -114,9 +123,20 @@ onMounted(async () => {
     dashboard.value = mockOrderDashboard
     warning.value = '订单服务未启动，当前展示本地演示数据。'
   } finally {
+    sentinelRules.value = await loadSentinelRules()
     loading.value = false
   }
 })
+
+async function loadSentinelRules() {
+  try {
+    const rules = await listSentinelRules()
+    return rules?.length ? rules : sentinelRulesMock
+  } catch (error) {
+    sentinelWarning.value = '库存服务 Sentinel 接口未启动，当前展示本地演示数据。'
+    return sentinelRulesMock
+  }
+}
 
 function formatNumber(value) {
   return Number(value).toLocaleString('en-US')

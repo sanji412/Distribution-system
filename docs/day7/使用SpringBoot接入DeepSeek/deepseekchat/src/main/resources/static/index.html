@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeepSeek 智能对话</title>
+  <style>
+    /* 全局样式重置 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "微软雅黑", sans-serif;
+      background-color: #f5f5f5;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* 聊天窗口容器 */
+    .chat-container {
+      width: 700px;
+      height: 600px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* 聊天头部 */
+    .chat-header {
+      height: 60px;
+      background-color: #409eff;
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* 消息展示区域 */
+    .chat-messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background-color: #fafafa;
+    }
+
+    /* 单条消息通用样式 */
+    .message-item {
+      margin-bottom: 16px;
+      display: flex;
+      max-width: 80%;
+    }
+
+    /* 用户消息：靠右 */
+    .message-user {
+      margin-left: auto;
+      justify-content: flex-end;
+    }
+
+    /* AI消息：靠左 */
+    .message-ai {
+      margin-right: auto;
+      justify-content: flex-start;
+    }
+
+    /* 消息气泡样式 */
+    .message-bubble {
+      padding: 10px 14px;
+      border-radius: 8px;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+
+    /* 用户消息气泡 */
+    .message-user .message-bubble {
+      background-color: #409eff;
+      color: white;
+      border-top-right-radius: 0;
+    }
+
+    /* AI消息气泡 */
+    .message-ai .message-bubble {
+      background-color: white;
+      color: #333;
+      border: 1px solid #e4e7ed;
+      border-top-left-radius: 0;
+    }
+
+    /* 底部输入区域 */
+    .chat-input-area {
+      height: 80px;
+      border-top: 1px solid #e4e7ed;
+      display: flex;
+      padding: 12px;
+      gap: 10px;
+    }
+
+    /* 输入框 */
+    #messageInput {
+      flex: 1;
+      border: 1px solid #dcdfe6;
+      border-radius: 6px;
+      padding: 0 12px;
+      font-size: 14px;
+      outline: none;
+      resize: none;
+    }
+
+    #messageInput:focus {
+      border-color: #409eff;
+    }
+
+    /* 发送按钮 */
+    #sendBtn {
+      width: 80px;
+      background-color: #409eff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    #sendBtn:hover {
+      background-color: #66b1ff;
+    }
+
+    #sendBtn:disabled {
+      background-color: #a0cfff;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+<div class="chat-container">
+  <!-- 聊天头部标题 -->
+  <div class="chat-header">
+    DeepSeek 智能助手
+  </div>
+
+  <!-- 消息展示区 -->
+  <div class="chat-messages" id="messageBox">
+    <!-- 消息会通过JS动态追加到这里 -->
+  </div>
+
+  <!-- 底部输入区 -->
+  <div class="chat-input-area">
+    <textarea id="messageInput" placeholder="请输入消息，按Enter发送..."></textarea>
+    <button id="sendBtn">发送</button>
+  </div>
+</div>
+
+<script>
+  // 获取DOM元素
+  const messageBox = document.getElementById('messageBox');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+
+  /**
+   * 向页面追加一条消息
+   * @param content 消息内容
+   * @param type 消息类型：user-用户消息，ai-AI消息
+   */
+  function appendMessage(content, type) {
+    // 创建消息项div
+    const messageItem = document.createElement('div');
+    messageItem.className = 'message-item message-' + type;
+
+    // 创建消息气泡
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    // 换行符转成br标签，保留换行格式
+    bubble.innerHTML = content.replace(/\n/g, '<br>');
+
+    messageItem.appendChild(bubble);
+    messageBox.appendChild(messageItem);
+
+    // 自动滚动到底部
+    messageBox.scrollTop = messageBox.scrollHeight;
+  }
+
+  /**
+   * 发送消息到后端
+   */
+  async function sendMessage() {
+    // 获取输入内容并去除首尾空格
+    const content = messageInput.value.trim();
+    if (!content) {
+      alert('请输入消息内容');
+      return;
+    }
+
+    // 1. 先把用户消息追加到页面
+    appendMessage(content, 'user');
+    // 清空输入框
+    messageInput.value = '';
+    // 禁用发送按钮，防止重复点击
+    sendBtn.disabled = true;
+    sendBtn.innerText = '思考中...';
+
+    try {
+      // 2. 发送POST请求到后端接口
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: content })
+      });
+
+      const result = await response.json();
+
+      // 3. 处理返回结果
+      if (result.success) {
+        // 追加AI回复
+        appendMessage(result.reply, 'ai');
+      } else {
+        appendMessage('出错了：' + result.message, 'ai');
+      }
+
+    } catch (error) {
+      appendMessage('网络错误：' + error.message, 'ai');
+    } finally {
+      // 恢复发送按钮
+      sendBtn.disabled = false;
+      sendBtn.innerText = '发送';
+      // 输入框重新获得焦点
+      messageInput.focus();
+    }
+  }
+
+  // 绑定发送按钮点击事件
+  sendBtn.addEventListener('click', sendMessage);
+
+  // 绑定回车发送事件
+  messageInput.addEventListener('keydown', function(e) {
+    // 按下Enter键且没有按Ctrl，就发送
+    if (e.key === 'Enter' && !e.ctrlKey) {
+      e.preventDefault(); // 阻止默认换行
+      sendMessage();
+    }
+  });
+
+  // 页面加载完成后，显示欢迎语
+  window.onload = function() {
+    appendMessage('你好！我是DeepSeek智能助手，有什么可以帮你的吗？', 'ai');
+    messageInput.focus();
+  };
+</script>
+</body>
+</html>

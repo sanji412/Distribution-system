@@ -2,7 +2,9 @@ package com.buu.order.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.buu.order.dto.OrderListItemDTO;
+import com.buu.order.dto.OrderStatusDistributionDTO;
 import com.buu.order.dto.OrderSummaryDTO;
+import com.buu.order.dto.OrderTrendDTO;
 import com.buu.order.entity.OrderMain;
 import org.apache.ibatis.annotations.Param;
 
@@ -24,6 +26,26 @@ public interface OrderMainMapper extends BaseMapper<OrderMain> {
      */
     OrderSummaryDTO selectTodaySummary(@Param("startTime") LocalDateTime startTime,
                                        @Param("endTime") LocalDateTime endTime);
+
+    /**
+     * 查询指定日期内的订单状态分布
+     *
+     * @param startTime 当日开始时间
+     * @param endTime 次日开始时间
+     * @return 状态分布明细
+     */
+    List<OrderStatusDistributionDTO> selectStatusDistribution(@Param("startTime") LocalDateTime startTime,
+                                                              @Param("endTime") LocalDateTime endTime);
+
+    /**
+     * 查询最近七天订单趋势
+     *
+     * @param startTime 七天窗口开始时间
+     * @param endTime 次日开始时间
+     * @return 按日期聚合的订单趋势
+     */
+    List<OrderTrendDTO> selectSevenDayTrend(@Param("startTime") LocalDateTime startTime,
+                                            @Param("endTime") LocalDateTime endTime);
 
     /**
      * 根据订单编号查询订单主表

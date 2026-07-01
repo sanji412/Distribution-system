@@ -1,5 +1,6 @@
 package com.buu.order.client;
 
+import com.buu.order.client.fallback.StockFeignClientFallback;
 import com.buu.order.common.R;
 import com.buu.order.dto.RemoteStockDTO;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -12,7 +13,7 @@ import java.util.List;
  * 库存中心 Feign 客户端
  * 通过 Nacos 服务名调用 stock-center 的库存查询接口。
  */
-@FeignClient(name = "stock-center")
+@FeignClient(name = "stock-center", fallback = StockFeignClientFallback.class)
 public interface StockFeignClient {
 
     /**

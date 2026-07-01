@@ -3,6 +3,7 @@ package com.buu.order.controller;
 import com.buu.order.common.R;
 import com.buu.order.dto.OrderDashboardResponse;
 import com.buu.order.dto.OrderListItemDTO;
+import com.buu.order.dto.OrderOperationsAnalysisResponse;
 import com.buu.order.dto.OrderRemoteDetailDTO;
 import com.buu.order.dto.OrderSummaryDTO;
 import com.buu.order.service.OrderQueryService;
@@ -39,6 +40,16 @@ public class OrderController {
     @GetMapping("/dashboard")
     public R<OrderDashboardResponse> dashboard() {
         return R.success(orderQueryService.getDashboard(LocalDate.now()));
+    }
+
+    /**
+     * 查询经营分析驾驶舱数据
+     *
+     * @return 今日指标、状态分布和最近七天趋势
+     */
+    @GetMapping("/analysis")
+    public R<OrderOperationsAnalysisResponse> analysis() {
+        return R.success(orderQueryService.getOperationsAnalysis(LocalDate.now()));
     }
 
     /**

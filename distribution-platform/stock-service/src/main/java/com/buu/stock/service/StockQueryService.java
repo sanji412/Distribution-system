@@ -24,4 +24,13 @@ public interface StockQueryService {
      * @return 商品库存列表
      */
     List<Stock> listByProductId(Long productId);
+
+    /**
+     * 扣减指定商品库存
+     *
+     * @param productId 商品 ID
+     * @param quantity  扣减数量
+     * @return 是否扣减成功
+     */
+    boolean deductStock(Long productId, Integer quantity);
 }
