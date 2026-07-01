@@ -695,6 +695,11 @@
   background: #73bf69;
 }
 
+.chat-row.system .avatar {
+  background: #f1c40f;
+  color: #141820;
+}
+
 .chat-row p {
   max-width: 520px;
   margin: 0;
@@ -712,6 +717,12 @@
   color: #dff4dc;
   background: rgba(72, 132, 66, 0.42);
   border-color: #3b7a3f;
+}
+
+.chat-row.system p {
+  color: #f6d86a;
+  background: rgba(241, 196, 15, 0.08);
+  border-color: rgba(241, 196, 15, 0.42);
 }
 
 .chat-input-row {
@@ -740,6 +751,27 @@
   background: #232a32;
 }
 
+.chat-input-row button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.ai-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 9px;
+  color: #8d929b;
+  font-size: 12px;
+}
+
+.ai-meta span {
+  padding: 4px 7px;
+  border: 1px solid #2c3235;
+  border-radius: 3px;
+  background: #0f1318;
+}
+
 .recommend-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -765,6 +797,43 @@
   color: #a9b2be;
   font-size: 12px;
   line-height: 1.55;
+}
+
+.prompt-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.prompt-tabs button {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid #2e5d97;
+  border-radius: 3px;
+  color: #58a6ff;
+  background: rgba(37, 92, 151, 0.16);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.prompt-tabs button.active {
+  color: #eaf3ff;
+  background: rgba(37, 92, 151, 0.5);
+}
+
+.prompt-box {
+  max-height: 280px;
+  margin: 10px 0 0;
+  padding: 12px;
+  overflow: auto;
+  white-space: pre-wrap;
+  border: 1px solid #2c3235;
+  border-radius: 3px;
+  background: #0b0c10;
+  color: #c9d4e2;
+  font-size: 11px;
+  line-height: 1.7;
 }
 
 .knowledge-list {

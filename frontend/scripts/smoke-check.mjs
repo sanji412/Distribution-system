@@ -75,12 +75,18 @@ const appVue = readFileSync(resolve(root, 'src/App.vue'), 'utf8')
 if (!appVue.includes('RouterView')) {
   throw new Error('App.vue must render pages through Vue Router')
 }
+if (!appVue.includes('KeepAlive') || !appVue.includes('route.meta.keepAlive')) {
+  throw new Error('App.vue must keep AI customer service page alive when switching routes')
+}
 
 const routerIndex = readFileSync(resolve(root, 'src/router/index.js'), 'utf8')
 for (const routeName of ['governance', 'orders', 'dashboard', 'ai', 'monitor']) {
   if (!routerIndex.includes(routeName)) {
     throw new Error(`router/index.js does not register route: ${routeName}`)
   }
+}
+if (!routerIndex.includes("meta: { keepAlive: true }")) {
+  throw new Error('AI route must declare meta.keepAlive so chat messages survive page switching')
 }
 
 const orderView = readFileSync(resolve(root, 'src/views/OrderFulfillment.vue'), 'utf8')

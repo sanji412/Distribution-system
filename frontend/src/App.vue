@@ -4,7 +4,12 @@
     <SideRail :pages="pages" :active-page="activePage" @change-page="goToPage" />
 
     <main class="app-main">
-      <RouterView />
+      <RouterView v-slot="{ Component, route }">
+        <KeepAlive>
+          <component :is="Component" v-if="route.meta.keepAlive" />
+        </KeepAlive>
+        <component :is="Component" v-if="!route.meta.keepAlive" />
+      </RouterView>
     </main>
   </div>
 </template>

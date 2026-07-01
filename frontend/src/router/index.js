@@ -28,7 +28,8 @@ const routes = [
   {
     path: '/ai',
     name: 'ai',
-    component: AiCustomerService
+    component: AiCustomerService,
+    meta: { keepAlive: true }
   },
   {
     path: '/monitor',
