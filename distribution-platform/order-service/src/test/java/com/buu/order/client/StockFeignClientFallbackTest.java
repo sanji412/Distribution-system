@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.cloud.openfeign.FeignClient;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,5 +33,15 @@ class StockFeignClientFallbackTest {
         assertThat(response.getData().get(0).getProductId()).isEqualTo(1L);
         assertThat(response.getData().get(0).getWarehouseId()).isEqualTo(-1L);
         assertThat(response.getData().get(0).getStockNum()).isZero();
+    }
+
+    @Test
+    void fallbackFailsStockDeductSoOrderGlobalTransactionCanRollback() {
+        StockFeignClientFallback fallback = new StockFeignClientFallback();
+
+        R<Map<String, Object>> response = fallback.deductStock(1L, 2);
+
+        assertThat(response.getCode()).isEqualTo(503);
+        assertThat(response.getMsg()).contains("库存服务暂不可用");
     }
 }

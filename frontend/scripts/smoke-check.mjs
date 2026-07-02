@@ -129,6 +129,9 @@ if (!orderApi.includes('/api/order/dashboard')) {
 if (!orderApi.includes('/api/order/analysis')) {
   throw new Error('order.js must request /api/order/analysis')
 }
+if (!orderApi.includes('/api/order/seata/flow')) {
+  throw new Error('order.js must request /api/order/seata/flow')
+}
 
 const governanceApi = readFileSync(resolve(root, 'src/api/governance.js'), 'utf8')
 if (!governanceApi.includes('/api/governance/overview')) {
@@ -163,6 +166,9 @@ for (const path of ['/api/stock/list', '/api/stock/warehouse/list', '/api/stock/
 
 if (!orderView.includes('listSentinelRules')) {
   throw new Error('Order page must request live Sentinel rule data')
+}
+if (!orderView.includes('getSeataFlow')) {
+  throw new Error('Order page must request live Seata transaction flow data')
 }
 
 const systemMonitorView = readFileSync(resolve(root, 'src/views/SystemMonitor.vue'), 'utf8')

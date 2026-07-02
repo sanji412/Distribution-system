@@ -218,6 +218,21 @@ CREATE TABLE IF NOT EXISTS undo_log (
     log_modified DATETIME NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS seata_transaction_record (
+    record_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    order_no VARCHAR(64) NOT NULL,
+    xid VARCHAR(128),
+    transaction_status VARCHAR(32) NOT NULL,
+    stock_branch_status VARCHAR(32) NOT NULL,
+    pay_branch_status VARCHAR(32) NOT NULL,
+    failure_reason VARCHAR(500),
+    create_time DATETIME NOT NULL,
+    update_time DATETIME NOT NULL,
+    INDEX idx_seata_record_order_no (order_no),
+    INDEX idx_seata_record_xid (xid),
+    INDEX idx_seata_record_create_time (create_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 INSERT INTO order_main (
     order_no, user_id, product_name, product_num, total_amount, order_status,
     receiver_name, receiver_phone, receiver_address, logistics_company, logistics_no,

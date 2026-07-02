@@ -7,3 +7,7 @@ export function getOrderDashboard() {
 export function getOrderAnalysis() {
   return request('/api/order/analysis')
 }
+
+export function getSeataFlow() {
+  return request('/api/order/seata/flow')
+}

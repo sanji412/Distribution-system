@@ -127,6 +127,16 @@ public class StockController {
         return R.success(sentinelRuleQueryService.listRules());
     }
 
+    /**
+     * 查询库存库 Seata undo_log 记录数
+     *
+     * @return undo_log 当前记录数
+     */
+    @GetMapping("/seata/undo-log/count")
+    public R<Long> countUndoLog() {
+        return R.success(stockQueryService.countUndoLog());
+    }
+
     private Map<String, Object> buildDeductResult(Long productId, Integer quantity, boolean deducted) {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("productId", productId);

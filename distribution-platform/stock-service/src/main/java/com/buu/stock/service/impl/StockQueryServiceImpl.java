@@ -75,4 +75,10 @@ public class StockQueryServiceImpl implements StockQueryService {
         stock.setUpdateTime(LocalDateTime.now());
         return stockMapper.updateById(stock) > 0;
     }
+
+    @Override
+    public Long countUndoLog() {
+        Long count = stockMapper.countUndoLog();
+        return count == null ? 0L : count;
+    }
 }

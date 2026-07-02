@@ -1,5 +1,6 @@
 package com.buu.pay.service;
 
+import com.buu.pay.dto.PaymentCreateRequest;
 import com.buu.pay.entity.Payment;
 
 import java.util.List;
@@ -24,4 +25,19 @@ public interface PaymentService {
      * @return 支付单信息，未找到时返回 null
      */
     Payment getByOrderNo(String orderNo);
+
+    /**
+     * 创建支付单
+     *
+     * @param request 创建支付单请求
+     * @return 已创建的支付单
+     */
+    Payment createPayment(PaymentCreateRequest request);
+
+    /**
+     * 查询当前支付库 Seata undo_log 数量
+     *
+     * @return undo_log 当前记录数
+     */
+    Long countUndoLog();
 }

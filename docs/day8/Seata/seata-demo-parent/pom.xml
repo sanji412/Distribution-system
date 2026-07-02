@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 父工程基础坐标 -->
+    <groupId>com.example</groupId>
+    <artifactId>seata-demo-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>seata-demo-parent</name>
+    <description>Seata分布式事务实战-父工程（统一版本管理）</description>
+
+    <!-- 多模块父工程必须指定打包方式为pom -->
+    <packaging>pom</packaging>
+
+    <!-- 聚合所有子模块，名称与文件夹名完全一致 -->
+    <modules>
+        <module>order-service</module>
+        <module>storage-service</module>
+        <module>account-service</module>
+    </modules>
+
+    <!-- 继承Spring Boot官方父工程，统一管理基础依赖 -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.12</version>
+        <relativePath/>
+    </parent>
+
+    <!-- 全局版本统一管理，所有子模块共享 -->
+    <properties>
+        <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- Spring Cloud 官方版本：适配Spring Boot 3.2.12 -->
+        <spring-cloud.version>2023.0.4</spring-cloud.version>
+        <!-- Spring Cloud Alibaba 版本：适配Spring Boot 3.2.x -->
+        <spring-cloud-alibaba.version>2023.0.1.2</spring-cloud-alibaba.version>
+        <!-- MyBatis-Plus 稳定版 -->
+        <mybatis-plus.version>3.5.5</mybatis-plus.version>
+    </properties>
+
+    <!-- 所有子模块通用依赖（自动继承，无需重复声明） -->
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+    <!-- 依赖版本管理：仅声明版本，子模块按需引入，无需写version -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- 1. Spring Cloud 官方全生态BOM -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- 2. Spring Cloud Alibaba 全生态BOM -->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- 3. MyBatis-Plus 版本锁定 -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis-spring</artifactId>
+                <version>3.0.3</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- 构建插件统一管理 -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- Spring Boot 打包插件 -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <configuration>
+                        <excludes>
+                            <exclude>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                            </exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

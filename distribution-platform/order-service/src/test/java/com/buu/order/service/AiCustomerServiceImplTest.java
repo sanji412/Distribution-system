@@ -5,6 +5,7 @@ import com.buu.order.client.StockFeignClient;
 import com.buu.order.common.R;
 import com.buu.order.dto.AiChatRequest;
 import com.buu.order.dto.AiChatResponse;
+import com.buu.order.dto.RemoteBrowseHistoryDTO;
 import com.buu.order.dto.RemoteProductDTO;
 import com.buu.order.dto.RemoteStockDTO;
 import com.buu.order.entity.AiChatRecord;
@@ -19,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -125,6 +127,11 @@ class AiCustomerServiceImplTest {
             product.setPrice(new BigDecimal("368.00"));
             return R.success(product);
         }
+
+        @Override
+        public R<List<RemoteBrowseHistoryDTO>> listBrowseHistory(Long userId) {
+            return R.success(List.of());
+        }
     }
 
     private static class FakeStockFeignClient implements StockFeignClient {
@@ -135,6 +142,16 @@ class AiCustomerServiceImplTest {
             stock.setProductId(productId);
             stock.setStockNum(50);
             return R.success(List.of(stock));
+        }
+
+        @Override
+        public R<Map<String, Object>> deductStock(Long productId, Integer quantity) {
+            return R.success(Map.of("deducted", true));
+        }
+
+        @Override
+        public R<Long> countUndoLog() {
+            return R.success(0L);
         }
     }
 }

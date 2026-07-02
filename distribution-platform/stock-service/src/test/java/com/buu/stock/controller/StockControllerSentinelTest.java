@@ -92,6 +92,11 @@ class StockControllerSentinelTest {
         public boolean deductStock(Long productId, Integer quantity) {
             return deductResult;
         }
+
+        @Override
+        public Long countUndoLog() {
+            return 0L;
+        }
     }
 
     private static class FakeWarehouseService implements WarehouseService {

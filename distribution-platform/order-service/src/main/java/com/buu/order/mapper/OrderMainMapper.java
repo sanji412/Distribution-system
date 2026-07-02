@@ -61,4 +61,11 @@ public interface OrderMainMapper extends BaseMapper<OrderMain> {
      * @return 订单列表行数据
      */
     List<OrderListItemDTO> selectOrderList();
+
+    /**
+     * 查询最近的 Seata 事务演示订单
+     *
+     * @return 最近订单列表行数据
+     */
+    List<OrderListItemDTO> selectRecentSeataOrderList();
 }

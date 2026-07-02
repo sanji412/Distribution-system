@@ -33,4 +33,11 @@ public interface StockQueryService {
      * @return 是否扣减成功
      */
     boolean deductStock(Long productId, Integer quantity);
+
+    /**
+     * 查询当前库存库 Seata undo_log 数量
+     *
+     * @return undo_log 当前记录数
+     */
+    Long countUndoLog();
 }

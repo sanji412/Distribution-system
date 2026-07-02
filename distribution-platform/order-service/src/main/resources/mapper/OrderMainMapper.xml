@@ -125,4 +125,26 @@
             create_time DESC
         LIMIT 5
     </select>
+
+    <select id="selectRecentSeataOrderList" resultType="com.buu.order.dto.OrderListItemDTO">
+        SELECT
+            order_no AS order_no,
+            product_name AS product_name,
+            product_num AS product_num,
+            total_amount AS total_amount,
+            order_status AS order_status,
+            CASE
+                WHEN order_status = '库存不足' THEN '扣减失败'
+                ELSE 'stock-center'
+            END AS stock_service,
+            CASE
+                WHEN order_status IN ('已支付', '已发货', '已完成') THEN 'pay-center'
+                ELSE '-'
+            END AS pay_service,
+            DATE_FORMAT(create_time, '%H:%i') AS order_time
+        FROM order_main
+        WHERE order_status IN ('已支付', '已发货', '已完成', '库存不足')
+        ORDER BY create_time DESC
+        LIMIT 8
+    </select>
 </mapper>

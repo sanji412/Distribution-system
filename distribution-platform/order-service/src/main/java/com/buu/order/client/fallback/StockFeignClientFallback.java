@@ -6,6 +6,7 @@ import com.buu.order.dto.RemoteStockDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 库存中心 Feign 降级处理
@@ -30,5 +31,15 @@ public class StockFeignClientFallback implements StockFeignClient {
         R<List<RemoteStockDTO>> result = R.success(List.of(fallbackStock));
         result.setMsg("库存服务暂不可用，已触发 Sentinel Feign 降级回调");
         return result;
+    }
+
+    @Override
+    public R<Map<String, Object>> deductStock(Long productId, Integer quantity) {
+        return R.fail(503, "库存服务暂不可用，已触发 Sentinel Feign 降级回调");
+    }
+
+    @Override
+    public R<Long> countUndoLog() {
+        return R.fail(503, "库存服务暂不可用，无法读取 undo_log 数量");
     }
 }

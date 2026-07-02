@@ -5,6 +5,8 @@ import com.buu.order.client.ProductFeignClient;
 import com.buu.order.client.StockFeignClient;
 import com.buu.order.common.R;
 import com.buu.order.dto.OrderRemoteDetailDTO;
+import com.buu.order.dto.PaymentCreateRequest;
+import com.buu.order.dto.RemoteBrowseHistoryDTO;
 import com.buu.order.dto.RemotePaymentDTO;
 import com.buu.order.dto.RemoteProductDTO;
 import com.buu.order.dto.RemoteStockDTO;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 class OrderRemoteQueryServiceImplTest {
@@ -101,6 +104,11 @@ class OrderRemoteQueryServiceImplTest {
             this.calledProductId = productId;
             return response;
         }
+
+        @Override
+        public R<List<RemoteBrowseHistoryDTO>> listBrowseHistory(Long userId) {
+            return R.success(List.of());
+        }
     }
 
     private static class FakeStockFeignClient implements StockFeignClient {
@@ -117,6 +125,16 @@ class OrderRemoteQueryServiceImplTest {
             this.calledProductId = productId;
             return response;
         }
+
+        @Override
+        public R<Map<String, Object>> deductStock(Long productId, Integer quantity) {
+            return R.success(Map.of("deducted", true));
+        }
+
+        @Override
+        public R<Long> countUndoLog() {
+            return R.success(0L);
+        }
     }
 
     private static class FakePayFeignClient implements PayFeignClient {
@@ -132,6 +150,16 @@ class OrderRemoteQueryServiceImplTest {
         public R<RemotePaymentDTO> detailByOrderNo(String orderNo) {
             this.calledOrderNo = orderNo;
             return response;
+        }
+
+        @Override
+        public R<RemotePaymentDTO> createPayment(PaymentCreateRequest request) {
+            return response;
+        }
+
+        @Override
+        public R<Long> countUndoLog() {
+            return R.success(0L);
         }
     }
 }

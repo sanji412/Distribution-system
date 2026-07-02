@@ -28,6 +28,24 @@
       </div>
     </PanelBox>
 
+    <PanelBox title="AI智能推荐（浏览历史）">
+      <template #action>
+        <StatusTag :value="recommendationStatus" :type="recommendationStatusType" />
+      </template>
+      <div v-if="recommendationWarning" class="inline-warning">{{ recommendationWarning }}</div>
+      <div class="recommend-grid">
+        <article v-for="item in recommendations" :key="`${item.title}-${item.content}`" class="recommend-card">
+          <strong>{{ item.title }}</strong>
+          <p>{{ item.content }}</p>
+        </article>
+      </div>
+      <div v-if="recommendationResult" class="ai-meta">
+        <span>数据源：{{ recommendationResult.dataSource }}</span>
+        <span>模型：{{ recommendationResult.modelUsed }}</span>
+        <span>用户：{{ recommendationResult.userId }}</span>
+      </div>
+    </PanelBox>
+
     <PanelBox title="Prompt模板映射">
       <template #action>
         <StatusTag value="基于Controller生成" type="primary" />
@@ -56,10 +74,10 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onActivated, onMounted, ref } from 'vue'
 import PanelBox from '../components/PanelBox.vue'
 import StatusTag from '../components/StatusTag.vue'
-import { getAiPromptTemplate, sendAiMessage } from '../api/ai'
+import { getAiPromptTemplate, getAiRecommendations, sendAiMessage } from '../api/ai'
 
 const messages = ref([
   {
@@ -74,6 +92,9 @@ const promptTemplate = ref(null)
 const activePromptKey = ref('intentRecognitionPrompt')
 const lastResult = ref(null)
 const chatWindowRef = ref(null)
+const recommendationResult = ref(null)
+const recommendationWarning = ref('')
+const recommendationLoading = ref(false)
 
 const promptTabs = [
   { key: 'intentRecognitionPrompt', label: '意图识别' },
@@ -97,6 +118,16 @@ const modelStatus = computed(() => {
 })
 
 const modelStatusType = computed(() => (lastResult.value?.modelUsed === 'local-fallback' ? 'warning' : 'success'))
+const recommendations = computed(() => recommendationResult.value?.items || [])
+const recommendationStatus = computed(() => {
+  if (recommendationLoading.value || !recommendationResult.value) {
+    return '加载中'
+  }
+  return recommendationResult.value.modelUsed === 'local-fallback' ? '本地推荐' : 'DeepSeek推荐'
+})
+const recommendationStatusType = computed(() => (
+  recommendationResult.value?.modelUsed === 'local-fallback' ? 'warning' : 'success'
+))
 
 onMounted(async () => {
   try {
@@ -108,7 +139,42 @@ onMounted(async () => {
       content: `Prompt 模板加载失败：${error.message}`
     })
   }
+
+  await loadRecommendations()
 })
+
+onActivated(async () => {
+  if (recommendationWarning.value || recommendationResult.value?.modelUsed === 'local-fallback') {
+    await loadRecommendations()
+  }
+})
+
+async function loadRecommendations() {
+  if (recommendationLoading.value) {
+    return
+  }
+
+  recommendationLoading.value = true
+  recommendationWarning.value = ''
+  try {
+    recommendationResult.value = await getAiRecommendations(1)
+  } catch (error) {
+    recommendationWarning.value = `智能推荐接口请求失败：${error.message}`
+    recommendationResult.value = {
+      userId: 1,
+      dataSource: 'local-fallback',
+      modelUsed: 'local-fallback',
+      items: [
+        {
+          title: '推荐暂不可用',
+          content: '智能推荐依赖 order-service 和 product-service 联调，请确认服务已启动后刷新页面。'
+        }
+      ]
+    }
+  } finally {
+    recommendationLoading.value = false
+  }
+}
 
 async function handleSend() {
   const content = inputMessage.value.trim()

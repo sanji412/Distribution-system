@@ -1,10 +1,13 @@
 package com.buu.pay.controller;
 
 import com.buu.pay.common.R;
+import com.buu.pay.dto.PaymentCreateRequest;
 import com.buu.pay.entity.Payment;
 import com.buu.pay.service.PaymentService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -43,5 +46,30 @@ public class PayController {
     @GetMapping("/order/{orderNo}")
     public R<Payment> detailByOrderNo(@PathVariable String orderNo) {
         return R.success(paymentService.getByOrderNo(orderNo));
+    }
+
+    /**
+     * 创建支付单
+     *
+     * @param request 创建支付单请求
+     * @return 支付单信息
+     */
+    @PostMapping("/create")
+    public R<Payment> create(@RequestBody PaymentCreateRequest request) {
+        try {
+            return R.success(paymentService.createPayment(request));
+        } catch (RuntimeException exception) {
+            return R.fail(exception.getMessage());
+        }
+    }
+
+    /**
+     * 查询支付库 Seata undo_log 记录数
+     *
+     * @return undo_log 当前记录数
+     */
+    @GetMapping("/seata/undo-log/count")
+    public R<Long> countUndoLog() {
+        return R.success(paymentService.countUndoLog());
     }
 }

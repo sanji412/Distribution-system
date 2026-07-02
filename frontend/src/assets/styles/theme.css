@@ -554,6 +554,60 @@
   font-size: 16px;
 }
 
+.seata-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.seata-metric {
+  min-height: 62px;
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid #2b323a;
+  border-radius: 4px;
+  background: #11161b;
+}
+
+.seata-metric span,
+.seata-metric small {
+  color: #8d929b;
+  font-size: 11px;
+}
+
+.seata-metric strong {
+  color: #dce3ee;
+  font-size: 18px;
+}
+
+.seata-metric strong.success {
+  color: #73bf69;
+}
+
+.seata-metric strong.danger {
+  color: #ff4d64;
+}
+
+.seata-two-column {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(420px, 1.2fr);
+  gap: 12px;
+  margin: 8px 0 12px;
+}
+
+.compact-table th,
+.compact-table td {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.mono-cell {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #9fb1c5;
+}
+
 .transaction-log {
   display: grid;
   gap: 6px;
@@ -571,6 +625,10 @@
 
 .transaction-log .danger {
   color: #ff4d64;
+}
+
+.transaction-log .warning {
+  color: #f1c40f;
 }
 
 .mini-actions {
@@ -852,6 +910,8 @@
 
 @media (max-width: 1100px) {
   .metric-grid,
+  .seata-metric-grid,
+  .seata-two-column,
   .monitor-card-grid,
   .instance-grid,
   .split-grid,
