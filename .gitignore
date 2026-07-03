@@ -7,6 +7,9 @@ derby.log
 node_modules/
 dist/
 .runtime/
+.env
+.docker-cache/
+distribution-platform/docker-build-jars/
 sessionStore/
 docs/superpowers/
 docs/2026_06_26_完整代码 - 副本 (2)/

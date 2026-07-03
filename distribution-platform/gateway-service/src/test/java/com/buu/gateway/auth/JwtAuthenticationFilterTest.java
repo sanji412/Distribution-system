@@ -35,6 +35,19 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
+    void swaggerApiDocsCanPassWithoutToken() {
+        AtomicBoolean nextCalled = new AtomicBoolean(false);
+        ServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.get("/v3/api-docs").build()
+        );
+
+        filter.filter(exchange, markNextCalled(nextCalled)).block();
+
+        assertThat(nextCalled).isTrue();
+        assertThat(exchange.getResponse().getStatusCode()).isNull();
+    }
+
+    @Test
     void protectedApiRejectsMissingToken() {
         AtomicBoolean nextCalled = new AtomicBoolean(false);
         ServerWebExchange exchange = MockServerWebExchange.from(

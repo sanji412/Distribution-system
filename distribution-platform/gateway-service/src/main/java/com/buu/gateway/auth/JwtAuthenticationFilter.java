@@ -21,7 +21,11 @@ public class JwtAuthenticationFilter implements WebFilter, Ordered {
     private static final String BEARER_PREFIX = "Bearer ";
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/auth/login",
-            "/api/auth/validate"
+            "/api/auth/validate",
+            "/v3/api-docs",
+            "/swagger-ui",
+            "/swagger-ui.html",
+            "/webjars"
     );
 
     private final GatewayJwtTokenService tokenService;

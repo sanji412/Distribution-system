@@ -2,7 +2,7 @@
   <header class="app-header">
     <div class="brand">
       <span class="status-dot"></span>
-      <span class="brand-mark">⌁</span>
+      <span class="brand-mark">DP</span>
       <strong>智能分销平台监控</strong>
     </div>
 

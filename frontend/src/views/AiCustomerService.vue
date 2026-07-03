@@ -78,6 +78,7 @@ import { computed, nextTick, onActivated, onMounted, ref } from 'vue'
 import PanelBox from '../components/PanelBox.vue'
 import StatusTag from '../components/StatusTag.vue'
 import { getAiPromptTemplate, getAiRecommendations, sendAiMessage } from '../api/ai'
+import { resolveAiModelStatus, resolveRecommendationStatus } from '../utils/aiStatus'
 
 const messages = ref([
   {
@@ -111,23 +112,29 @@ const activePrompt = computed(() => {
 })
 
 const modelStatus = computed(() => {
-  if (!lastResult.value) {
-    return '在线'
-  }
-  return lastResult.value.modelUsed === 'local-fallback' ? '降级可用' : 'DeepSeek在线'
+  return resolveAiModelStatus({
+    lastResult: lastResult.value,
+    recommendationResult: recommendationResult.value,
+    loading: recommendationLoading.value
+  }).label
 })
 
-const modelStatusType = computed(() => (lastResult.value?.modelUsed === 'local-fallback' ? 'warning' : 'success'))
+const modelStatusType = computed(() => resolveAiModelStatus({
+  lastResult: lastResult.value,
+  recommendationResult: recommendationResult.value,
+  loading: recommendationLoading.value
+}).type)
 const recommendations = computed(() => recommendationResult.value?.items || [])
 const recommendationStatus = computed(() => {
-  if (recommendationLoading.value || !recommendationResult.value) {
-    return '加载中'
-  }
-  return recommendationResult.value.modelUsed === 'local-fallback' ? '本地推荐' : 'DeepSeek推荐'
+  return resolveRecommendationStatus({
+    loading: recommendationLoading.value,
+    recommendationResult: recommendationResult.value
+  }).label
 })
-const recommendationStatusType = computed(() => (
-  recommendationResult.value?.modelUsed === 'local-fallback' ? 'warning' : 'success'
-))
+const recommendationStatusType = computed(() => resolveRecommendationStatus({
+  loading: recommendationLoading.value,
+  recommendationResult: recommendationResult.value
+}).type)
 
 onMounted(async () => {
   try {

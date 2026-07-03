@@ -7,7 +7,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test:smoke": "node scripts/smoke-check.mjs"
+    "test:smoke": "node scripts/smoke-check.mjs",
+    "test:ai-status": "node scripts/ai-status-check.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^5.2.1",
