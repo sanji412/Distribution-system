@@ -35,6 +35,13 @@ class GatewayRouteConfigurationTests {
         assertRoute(2, "stock_route", "lb://stock-center", "/api/stock/**");
         assertRoute(3, "order_route", "lb://order-center", "/api/order/**");
         assertRoute(4, "pay_route", "lb://pay-center", "/api/pay/**");
+        assertRoute(5, "auth_route", "lb://auth-center", "/api/auth/**");
+    }
+
+    @Test
+    void gatewayUsesJwtConfigurationForUnifiedAuth() {
+        assertThat(properties.getProperty("jwt.secret")).contains("JWT_SECRET");
+        assertThat(properties.getProperty("jwt.issuer")).isEqualTo("distribution-platform");
     }
 
     @Test

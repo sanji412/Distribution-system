@@ -20,14 +20,17 @@
     </nav>
 
     <div class="account">
-      <span class="admin-badge">ADMIN</span>
-      <span>admin</span>
+      <span class="admin-badge">{{ roleLabel }}</span>
+      <span>{{ displayName }}</span>
+      <button class="logout-button" type="button" @click="$emit('logout')">退出</button>
     </div>
   </header>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   pages: {
     type: Array,
     required: true
@@ -35,8 +38,15 @@ defineProps({
   activePage: {
     type: String,
     required: true
+  },
+  currentUser: {
+    type: Object,
+    default: null
   }
 })
 
-defineEmits(['change-page'])
+defineEmits(['change-page', 'logout'])
+
+const displayName = computed(() => props.currentUser?.nickname || props.currentUser?.username || '未登录')
+const roleLabel = computed(() => String(props.currentUser?.role || 'USER').toUpperCase())
 </script>

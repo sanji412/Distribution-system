@@ -3,6 +3,7 @@
 target/
 *.iml
 logs/
+derby.log
 node_modules/
 dist/
 .runtime/

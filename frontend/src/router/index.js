@@ -4,11 +4,19 @@ import OrderFulfillment from '../views/OrderFulfillment.vue'
 import DataDashboard from '../views/DataDashboard.vue'
 import AiCustomerService from '../views/AiCustomerService.vue'
 import SystemMonitor from '../views/SystemMonitor.vue'
+import LoginView from '../views/LoginView.vue'
+import { isAuthenticated } from '../api/session'
 
 const routes = [
   {
     path: '/',
     redirect: '/governance'
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: LoginView,
+    meta: { public: true }
   },
   {
     path: '/governance',
@@ -41,6 +49,21 @@ const routes = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes
+})
+
+router.beforeEach((to) => {
+  if (to.meta.public && isAuthenticated()) {
+    return { name: 'governance' }
+  }
+
+  if (!to.meta.public && !isAuthenticated()) {
+    return {
+      name: 'login',
+      query: { redirect: to.fullPath }
+    }
+  }
+
+  return true
 })
 
 export default router

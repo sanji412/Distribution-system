@@ -7,6 +7,7 @@ CREATE DATABASE IF NOT EXISTS product_db DEFAULT CHARACTER SET utf8mb4 COLLATE u
 CREATE DATABASE IF NOT EXISTS stock_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS order_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE DATABASE IF NOT EXISTS pay_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS auth_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 USE user_db;
 
@@ -25,15 +26,40 @@ CREATE TABLE IF NOT EXISTS sys_user (
 -- 密码均为 123456（BCrypt 加密），用于后续登录演示。
 INSERT INTO sys_user (username, password, nickname, role, status, phone)
 VALUES
-    ('admin', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '系统管理员', 'admin', 1, '13800138000'),
-    ('user01', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '普通用户01', 'user', 1, '13800138001'),
-    ('user02', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '普通用户02', 'user', 1, '13800138002')
+    ('admin', '$2a$10$2vpREfFqoEbjuKj6p/1WuepbCnazpyr3Z1K1kDwejpF10fyMtzTqi', '系统管理员', 'admin', 1, '13800138000'),
+    ('user01', '$2a$10$2vpREfFqoEbjuKj6p/1WuepbCnazpyr3Z1K1kDwejpF10fyMtzTqi', '普通用户01', 'user', 1, '13800138001'),
+    ('user02', '$2a$10$2vpREfFqoEbjuKj6p/1WuepbCnazpyr3Z1K1kDwejpF10fyMtzTqi', '普通用户02', 'user', 1, '13800138002')
 ON DUPLICATE KEY UPDATE
     password = VALUES(password),
     nickname = VALUES(nickname),
     role = VALUES(role),
     status = VALUES(status),
     phone = VALUES(phone);
+
+USE auth_db;
+
+CREATE TABLE IF NOT EXISTS auth_account (
+    account_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(100) NOT NULL,
+    nickname VARCHAR(50),
+    role VARCHAR(20) NOT NULL,
+    status TINYINT DEFAULT 1,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 密码均为 123456（BCrypt 加密），用于统一登录演示。
+INSERT INTO auth_account (account_id, username, password, nickname, role, status)
+VALUES
+    (1, 'admin', '$2a$10$2vpREfFqoEbjuKj6p/1WuepbCnazpyr3Z1K1kDwejpF10fyMtzTqi', '系统管理员', 'admin', 1),
+    (2, 'user01', '$2a$10$2vpREfFqoEbjuKj6p/1WuepbCnazpyr3Z1K1kDwejpF10fyMtzTqi', '普通用户01', 'user', 1),
+    (3, 'user02', '$2a$10$2vpREfFqoEbjuKj6p/1WuepbCnazpyr3Z1K1kDwejpF10fyMtzTqi', '普通用户02', 'user', 1)
+ON DUPLICATE KEY UPDATE
+    password = VALUES(password),
+    nickname = VALUES(nickname),
+    role = VALUES(role),
+    status = VALUES(status);
 
 USE product_db;
 

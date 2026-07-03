@@ -24,6 +24,7 @@
         <module>stock-service</module>
         <module>order-service</module>
         <module>pay-service</module>
+        <module>auth-service</module>
         <module>gateway-service</module>
     </modules>
 

@@ -1,6 +1,14 @@
 <template>
-  <div class="app-shell">
-    <AppHeader :pages="pages" :active-page="activePage" @change-page="goToPage" />
+  <RouterView v-if="route.meta.public" />
+
+  <div v-else class="app-shell">
+    <AppHeader
+      :pages="pages"
+      :active-page="activePage"
+      :current-user="currentUser"
+      @change-page="goToPage"
+      @logout="handleLogout"
+    />
     <SideRail :pages="pages" :active-page="activePage" @change-page="goToPage" />
 
     <main class="app-main">
@@ -15,14 +23,16 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { BarChart3, ClipboardList, MonitorCog, RadioTower, Bot } from 'lucide-vue-next'
 import AppHeader from './components/AppHeader.vue'
 import SideRail from './components/SideRail.vue'
+import { clearAuthSession, getCurrentUser } from './api/session'
 
 const route = useRoute()
 const router = useRouter()
+const currentUser = ref(getCurrentUser())
 
 const pages = [
   {
@@ -74,4 +84,23 @@ function goToPage(pageId) {
     router.push({ name: pageId })
   }
 }
+
+function refreshCurrentUser() {
+  currentUser.value = getCurrentUser()
+}
+
+function handleLogout() {
+  clearAuthSession()
+  router.replace({ name: 'login' })
+}
+
+onMounted(() => {
+  window.addEventListener('auth-session-change', refreshCurrentUser)
+  window.addEventListener('storage', refreshCurrentUser)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('auth-session-change', refreshCurrentUser)
+  window.removeEventListener('storage', refreshCurrentUser)
+})
 </script>
